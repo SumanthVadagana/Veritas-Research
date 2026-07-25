@@ -10,7 +10,6 @@ import {
   LogIn,
   UserPlus,
   LogOut,
-  User,
   Sun,
   Moon,
   ChevronDown,
@@ -43,31 +42,33 @@ export function Navbar() {
           </div>
         </Link>
 
-        {/* Navigation links */}
-        <nav className="hidden md:flex items-center gap-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-2xl">
-          <Link
-            href="/research"
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-              pathname === "/research"
-                ? "bg-[var(--accent-pink)] text-white shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Dashboard
-          </Link>
-          <Link
-            href="/history"
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 ${
-              pathname === "/history"
-                ? "bg-[var(--accent-pink)] text-white shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
-            }`}
-          >
-            <History className="w-3.5 h-3.5" />
-            History
-          </Link>
-        </nav>
+        {/* Navigation links — ONLY VISIBLE WHEN LOGGED IN */}
+        {isAuthenticated && (
+          <nav className="hidden md:flex items-center gap-1.5 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] p-1 rounded-2xl">
+            <Link
+              href="/research"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
+                pathname === "/research"
+                  ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                  : "text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              Dashboard
+            </Link>
+            <Link
+              href="/history"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
+                pathname === "/history"
+                  ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                  : "text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
+              }`}
+            >
+              <History className="w-3.5 h-3.5" />
+              History
+            </Link>
+          </nav>
+        )}
 
         {/* Controls: Theme Toggle & Auth */}
         <div className="flex items-center gap-3">
@@ -75,18 +76,18 @@ export function Navbar() {
           <button
             onClick={toggleTheme}
             aria-label="Toggle Dark / Light Mode"
-            className="p-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] transition-all flex items-center gap-1.5 text-xs font-medium"
+            className="p-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-card-hover)] text-[var(--text-primary)] transition-all flex items-center gap-1.5 text-xs font-bold shadow-sm"
             title={`Switch to ${theme === "dark" ? "Light Mode (White & Red)" : "Dark Mode (Black & Pink)"}`}
           >
             {theme === "dark" ? (
               <>
                 <Sun className="w-4 h-4 text-amber-400 animate-spin-slow" />
-                <span className="hidden sm:inline text-[var(--text-secondary)]">Light</span>
+                <span className="hidden sm:inline text-[var(--text-primary)] font-bold">Light</span>
               </>
             ) : (
               <>
                 <Moon className="w-4 h-4 text-rose-600" />
-                <span className="hidden sm:inline text-[var(--text-secondary)]">Dark</span>
+                <span className="hidden sm:inline text-[var(--text-primary)] font-bold">Dark</span>
               </>
             )}
           </button>
@@ -96,12 +97,12 @@ export function Navbar() {
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-card-hover)] transition-all"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-card-hover)] transition-all shadow-sm"
               >
                 <div className="w-7 h-7 rounded-lg bg-[var(--gradient-brand)] flex items-center justify-center text-white text-xs font-bold uppercase">
                   {user.name.charAt(0)}
                 </div>
-                <span className="text-xs font-medium text-[var(--text-primary)] max-w-[100px] truncate hidden sm:inline">
+                <span className="text-xs font-extrabold text-[var(--text-primary)] max-w-[100px] truncate hidden sm:inline">
                   {user.name}
                 </span>
                 <ChevronDown className="w-3.5 h-3.5 text-[var(--text-muted)]" />
@@ -116,10 +117,10 @@ export function Navbar() {
                     className="absolute right-0 mt-2 w-56 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] p-2 shadow-2xl z-50"
                   >
                     <div className="px-3 py-2 border-b border-[var(--border-subtle)] mb-1">
-                      <p className="text-xs font-semibold text-[var(--text-primary)] truncate">
+                      <p className="text-xs font-bold text-[var(--text-primary)] truncate">
                         {user.name}
                       </p>
-                      <p className="text-[11px] text-[var(--text-muted)] truncate">
+                      <p className="text-[11px] text-[var(--text-muted)] font-semibold truncate">
                         {user.email}
                       </p>
                     </div>
@@ -128,7 +129,7 @@ export function Navbar() {
                         logout();
                         setIsDropdownOpen(false);
                       }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-medium text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-rose-500 hover:bg-rose-500/10 rounded-xl transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign Out
@@ -141,14 +142,14 @@ export function Navbar() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => openAuthModal("signin")}
-                className="px-3.5 py-1.5 rounded-xl border border-[var(--border-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold transition-all flex items-center gap-1.5"
+                className="px-3.5 py-1.5 rounded-xl border border-[var(--border-subtle)] text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] text-xs font-bold transition-all flex items-center gap-1.5"
               >
                 <LogIn className="w-3.5 h-3.5" />
                 Sign In
               </button>
               <button
                 onClick={() => openAuthModal("signup")}
-                className="px-3.5 py-1.5 rounded-xl bg-[var(--accent-pink)] hover:opacity-90 text-white text-xs font-semibold transition-all flex items-center gap-1.5 shadow-md"
+                className="px-3.5 py-1.5 rounded-xl bg-[var(--accent-pink)] hover:opacity-90 text-white text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-md"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 Sign Up

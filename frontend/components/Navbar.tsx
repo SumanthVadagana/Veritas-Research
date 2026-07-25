@@ -14,7 +14,6 @@ import {
   Moon,
   ChevronDown,
   Sparkles,
-  FileText,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -67,17 +66,6 @@ export function Navbar() {
             >
               <History className="w-3.5 h-3.5" />
               History
-            </Link>
-            <Link
-              href="/presentation"
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 ${
-                pathname === "/presentation"
-                  ? "bg-[var(--accent-pink)] text-white shadow-sm"
-                  : "text-[var(--text-primary)] hover:bg-[var(--bg-card)]"
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              Presentation
             </Link>
           </nav>
         )}

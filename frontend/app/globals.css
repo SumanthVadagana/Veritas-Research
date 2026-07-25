@@ -1,0 +1,170 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Design Tokens ─────────────────────────────────────────────────────────── */
+
+/* Dark Mode (Default): Black & Deep Pink (#09090b + Deep Pink #ec4899 / #f43f5e) */
+:root, html.dark {
+  --bg-primary:    #09090b;
+  --bg-secondary:  #121217;
+  --bg-tertiary:   #181820;
+  --bg-card:       rgba(244, 63, 94, 0.035);
+  --bg-card-hover: rgba(244, 63, 94, 0.075);
+
+  --accent-pink:    #ec4899;
+  --accent-rose:    #f43f5e;
+  --accent-sky:     #0ea5e9;
+  --accent-emerald: #10b981;
+  --accent-amber:   #f59e0b;
+
+  --text-primary:   #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted:     #64748b;
+
+  --border-subtle: rgba(244, 63, 94, 0.15);
+  --border-medium: rgba(244, 63, 94, 0.3);
+
+  --gradient-brand: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #8b5cf6 100%);
+  --grid-color:     rgba(244, 63, 94, 0.03);
+}
+
+/* Light Mode: White & Crimson Red (#fcfcfc + Crimson Red #dc2626 / #ef4444) */
+html.light {
+  --bg-primary:    #fcfcfc;
+  --bg-secondary:  #f1f5f9;
+  --bg-tertiary:   #e2e8f0;
+  --bg-card:       rgba(220, 38, 38, 0.025);
+  --bg-card-hover: rgba(220, 38, 38, 0.06);
+
+  --accent-pink:    #dc2626;
+  --accent-rose:    #ef4444;
+  --accent-sky:     #0284c7;
+  --accent-emerald: #059669;
+  --accent-amber:   #d97706;
+
+  --text-primary:   #0f172a;
+  --text-secondary: #334155;
+  --text-muted:     #64748b;
+
+  --border-subtle: rgba(220, 38, 38, 0.14);
+  --border-medium: rgba(220, 38, 38, 0.28);
+
+  --gradient-brand: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #b91c1c 100%);
+  --grid-color:     rgba(220, 38, 38, 0.035);
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-rose); }
+
+/* ─── Utilities ─────────────────────────────────────────────────────────────── */
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-subtle);
+}
+
+.glass-hover:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-medium);
+}
+
+.gradient-text {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ─── Shimmer loader ────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 0%,
+    var(--bg-card-hover) 50%,
+    var(--bg-card) 100%
+  );
+  background-size: 400px 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ─── Glow effects ──────────────────────────────────────────────────────────── */
+.glow-pink { box-shadow: 0 0 24px rgba(236, 72, 153, 0.35); }
+.glow-red  { box-shadow: 0 0 24px rgba(220, 38, 38, 0.35); }
+
+/* ─── Prose overrides ───────────────────────────────────────────────────────── */
+.prose-veritas {
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+.prose-veritas h2 {
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.35rem;
+}
+.prose-veritas h3 {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.4rem;
+}
+.prose-veritas p { margin-bottom: 0.85rem; font-size: 0.875rem; }
+.prose-veritas ul, .prose-veritas ol { padding-left: 1.25rem; margin-bottom: 0.85rem; }
+.prose-veritas li { margin-bottom: 0.3rem; font-size: 0.875rem; }
+.prose-veritas strong { color: var(--text-primary); font-weight: 600; }
+.prose-veritas a { color: var(--accent-pink); text-decoration: none; }
+.prose-veritas a:hover { text-decoration: underline; }
+.prose-veritas code {
+  background: var(--bg-card-hover);
+  color: var(--accent-rose);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+.prose-veritas blockquote {
+  border-left: 3px solid var(--accent-pink);
+  padding-left: 1rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 1rem 0;
+}

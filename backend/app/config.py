@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # Tavily
     TAVILY_API_KEY: str = ""
-    TAVILY_MAX_RESULTS: int = 5
+    TAVILY_MAX_RESULTS: int = 3
 
     # CORS
     FRONTEND_URL: str = "http://localhost:3000"

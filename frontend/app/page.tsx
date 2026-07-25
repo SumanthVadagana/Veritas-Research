@@ -124,8 +124,8 @@ export default function LandingPage() {
           >
             {/* Top brand header */}
             <div className="text-center mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-[var(--gradient-brand)] flex items-center justify-center mx-auto mb-3 shadow-md">
-                <Shield className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-2xl bg-brand-gradient flex items-center justify-center mx-auto mb-3 shadow-md">
+                <Shield className="w-6 h-6 text-white stroke-[2.5]" />
               </div>
               <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
                 Veritas <span className="gradient-text">Research</span>

@@ -29,7 +29,7 @@
   --grid-color:     rgba(236, 72, 153, 0.04);
 }
 
-/* Light Mode: White & Crimson Red (Ultra Sharp High-Contrast Black & Deep Slate Text) */
+/* Light Mode: White & Crimson Red */
 html.light {
   --bg-primary:    #ffffff;
   --bg-secondary:  #f8fafc;
@@ -74,6 +74,12 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-medium); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent-pink); }
+
+/* ─── Brand Gradient Utility ────────────────────────────────────────────────── */
+.bg-brand-gradient {
+  background-color: var(--accent-pink) !important;
+  background-image: var(--gradient-brand) !important;
+}
 
 /* ─── Utilities ─────────────────────────────────────────────────────────────── */
 .glass {

@@ -29,14 +29,14 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-[var(--gradient-brand)] flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-            <Shield className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 rounded-xl bg-brand-gradient flex items-center justify-center shadow-md group-hover:scale-105 transition-transform text-white">
+            <Shield className="w-5 h-5 text-white stroke-[2.5]" />
           </div>
           <div className="flex flex-col">
             <span className="font-extrabold text-base tracking-tight text-[var(--text-primary)] leading-none">
               Veritas <span className="gradient-text">Research</span>
             </span>
-            <span className="text-[10px] text-[var(--text-muted)] font-mono tracking-wider uppercase mt-0.5">
+            <span className="text-[10px] text-[var(--text-muted)] font-mono tracking-wider uppercase mt-0.5 font-bold">
               Multi-Agent AI
             </span>
           </div>
@@ -99,7 +99,7 @@ export function Navbar() {
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-card-hover)] transition-all shadow-sm"
               >
-                <div className="w-7 h-7 rounded-lg bg-[var(--gradient-brand)] flex items-center justify-center text-white text-xs font-bold uppercase">
+                <div className="w-7 h-7 rounded-lg bg-brand-gradient flex items-center justify-center text-white text-xs font-bold uppercase">
                   {user.name.charAt(0)}
                 </div>
                 <span className="text-xs font-extrabold text-[var(--text-primary)] max-w-[100px] truncate hidden sm:inline">

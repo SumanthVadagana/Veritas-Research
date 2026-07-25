@@ -30,16 +30,16 @@ export function SourceCard({
   const credPct = credibility_score != null ? Math.round(credibility_score * 100) : 75;
 
   const credColor =
-    credPct >= 80 ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" :
-    credPct >= 60 ? "text-sky-400 bg-sky-500/10 border-sky-500/20" :
-    "text-amber-400 bg-amber-500/10 border-amber-500/20";
+    credPct >= 80 ? "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" :
+    credPct >= 60 ? "text-sky-500 bg-sky-500/10 border-sky-500/20" :
+    "text-amber-500 bg-amber-500/10 border-amber-500/20";
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.25 }}
-      className="rounded-xl border border-white/7 bg-white/[0.025] hover:bg-white/[0.04] transition-all duration-200 overflow-hidden"
+      className="rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] transition-all duration-200 overflow-hidden"
     >
       <div
         onClick={() => setExpanded(!expanded)}
@@ -47,20 +47,20 @@ export function SourceCard({
       >
         {/* Index badge */}
         {source_index != null && (
-          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-sky-500/20 text-sky-400 text-xs font-bold flex items-center justify-center mt-0.5">
+          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[var(--accent-pink)]/20 text-[var(--accent-pink)] text-xs font-bold flex items-center justify-center mt-0.5">
             {source_index}
           </span>
         )}
 
         {/* Title & Domain */}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-slate-200 truncate hover:text-sky-300 transition-colors leading-tight">
+          <p className="text-xs font-bold text-[var(--text-primary)] truncate hover:text-[var(--accent-pink)] transition-colors leading-tight">
             {title || domain}
           </p>
           <div className="flex items-center gap-2 mt-1">
             <div className="flex items-center gap-1">
-              <Globe className="w-3 h-3 text-slate-500 flex-shrink-0" />
-              <span className="text-xs text-slate-500 truncate">{domain}</span>
+              <Globe className="w-3 h-3 text-[var(--text-muted)] flex-shrink-0" />
+              <span className="text-xs text-[var(--text-muted)] truncate">{domain}</span>
             </div>
 
             {/* Credibility Badge */}
@@ -78,7 +78,7 @@ export function SourceCard({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="p-1 rounded-lg text-slate-500 hover:text-sky-400 hover:bg-white/5 transition-colors"
+            className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-pink)] hover:bg-[var(--bg-card-hover)] transition-colors"
             title="Open external link"
           >
             <ExternalLink className="w-3.5 h-3.5" />
@@ -86,7 +86,7 @@ export function SourceCard({
           <motion.div
             animate={{ rotate: expanded ? 180 : 0 }}
             transition={{ duration: 0.2 }}
-            className="text-slate-500"
+            className="text-[var(--text-muted)]"
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </motion.div>
@@ -101,20 +101,20 @@ export function SourceCard({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
-            className="px-3.5 pb-3.5 pt-0 border-t border-white/5"
+            className="px-3.5 pb-3.5 pt-0 border-t border-[var(--border-subtle)]"
           >
-            <p className="text-xs text-slate-400 leading-relaxed mt-2 bg-black/20 p-2.5 rounded-lg border border-white/5">
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed mt-2 bg-[var(--bg-card)] p-2.5 rounded-lg border border-[var(--border-subtle)]">
               {snippet || "No detailed excerpt available for this source."}
             </p>
             <div className="mt-2 flex items-center justify-between text-[11px]">
-              <span className="text-slate-500 font-mono text-[10px] truncate max-w-[240px]">
+              <span className="text-[var(--text-muted)] font-mono text-[10px] truncate max-w-[240px]">
                 {url}
               </span>
               <a
                 href={url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sky-400 hover:underline flex items-center gap-1"
+                className="text-[var(--accent-pink)] hover:underline flex items-center gap-1 font-semibold"
               >
                 Visit Source <ExternalLink className="w-2.5 h-2.5" />
               </a>

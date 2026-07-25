@@ -50,9 +50,9 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
         <div
           className={`relative rounded-2xl border transition-all duration-200 ${
             isLoading
-              ? "border-sky-500/40 shadow-[0_0_18px_rgba(14,165,233,0.12)]"
-              : "border-white/8 focus-within:border-sky-500/40 focus-within:shadow-[0_0_18px_rgba(14,165,233,0.1)]"
-          } bg-white/[0.035] backdrop-blur-sm`}
+              ? "border-[var(--accent-pink)] shadow-md"
+              : "border-[var(--border-subtle)] focus-within:border-[var(--accent-pink)]"
+          } bg-[var(--bg-card)] backdrop-blur-sm`}
         >
           <textarea
             ref={textareaRef}
@@ -63,7 +63,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
             placeholder="Ask any complex research question…"
             rows={3}
             disabled={isLoading}
-            className="w-full bg-transparent px-4 pt-4 pb-14 text-sm text-slate-200 placeholder-slate-600 resize-none outline-none leading-relaxed"
+            className="w-full bg-transparent px-4 pt-4 pb-14 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none outline-none leading-relaxed"
           />
 
           {/* Toolbar */}
@@ -73,9 +73,9 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
               <button
                 type="button"
                 onClick={() => setDepthOpen((o) => !o)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:bg-white/5 transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] transition-colors"
               >
-                <Zap className="w-3 h-3" />
+                <Zap className="w-3 h-3 text-[var(--accent-pink)]" />
                 <span>
                   Depth: {depth} — {DEPTH_LABELS[depth]}
                 </span>
@@ -89,7 +89,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.97 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute bottom-9 left-0 w-40 bg-[#16213e] border border-white/10 rounded-xl p-1.5 shadow-2xl z-20"
+                    className="absolute bottom-9 left-0 w-44 bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-xl p-1.5 shadow-2xl z-20"
                   >
                     {[1, 2, 3, 4, 5].map((d) => (
                       <button
@@ -101,12 +101,12 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                         }}
                         className={`flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-xs transition-colors ${
                           depth === d
-                            ? "bg-sky-500/20 text-sky-300"
-                            : "text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                            ? "bg-[var(--accent-pink)] text-white font-bold"
+                            : "text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
                         }`}
                       >
                         <span className="font-semibold">{d}</span>
-                        <span className="text-slate-500">
+                        <span className="text-xs">
                           {DEPTH_LABELS[d]}
                         </span>
                       </button>
@@ -122,7 +122,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                 <button
                   type="button"
                   onClick={onReset}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-rose-500 hover:bg-rose-500/10 transition-colors"
                 >
                   <X className="w-3 h-3" />
                   Cancel
@@ -132,7 +132,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                 type="submit"
                 id="research-submit"
                 disabled={!query.trim() || isLoading}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold transition-all duration-200 hover:shadow-[0_0_14px_rgba(14,165,233,0.4)]"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--accent-pink)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-md"
               >
                 <Search className="w-3.5 h-3.5" />
                 {isLoading ? "Researching…" : "Research"}
@@ -141,7 +141,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
           </div>
         </div>
 
-        <p className="mt-1.5 text-xs text-slate-700 text-right">
+        <p className="mt-1.5 text-[11px] text-[var(--text-muted)] text-right font-mono">
           Ctrl+Enter to submit
         </p>
       </form>
@@ -149,7 +149,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
       {/* Examples */}
       {!isLoading && (
         <div>
-          <p className="text-xs text-slate-700 font-medium uppercase tracking-wider mb-1.5">
+          <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider mb-1.5">
             Examples
           </p>
           <div className="flex flex-col gap-0.5">
@@ -160,9 +160,9 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                   setQuery(q);
                   textareaRef.current?.focus();
                 }}
-                className="text-left text-xs text-slate-600 hover:text-sky-400 transition-colors py-1 px-2 rounded-lg hover:bg-sky-500/5 truncate"
+                className="text-left text-xs text-[var(--text-secondary)] hover:text-[var(--accent-pink)] transition-colors py-1 px-2 rounded-lg hover:bg-[var(--bg-card-hover)] truncate"
               >
-                <span className="text-slate-700 mr-1">›</span>
+                <span className="text-[var(--text-muted)] mr-1.5">›</span>
                 {q}
               </button>
             ))}

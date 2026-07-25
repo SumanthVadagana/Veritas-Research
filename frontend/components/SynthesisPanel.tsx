@@ -26,7 +26,7 @@ type Tab = "synthesis" | "sources" | "factchecks";
 function ConfidenceGauge({ value }: { value: number }) {
   const pct = Math.round(value * 100);
   const color =
-    pct >= 70 ? "#10b981" : pct >= 50 ? "#f59e0b" : "#f43f5e";
+    pct >= 70 ? "var(--accent-emerald)" : pct >= 50 ? "var(--accent-amber)" : "var(--accent-pink)";
   const circumference = 2 * Math.PI * 14; // r=14
 
   return (
@@ -38,7 +38,7 @@ function ConfidenceGauge({ value }: { value: number }) {
             cy="18"
             r="14"
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="var(--border-subtle)"
             strokeWidth="3"
           />
           <motion.circle
@@ -65,8 +65,8 @@ function ConfidenceGauge({ value }: { value: number }) {
         </span>
       </div>
       <div>
-        <p className="text-xs text-slate-600">Confidence</p>
-        <p className="text-sm font-semibold" style={{ color }}>
+        <p className="text-xs text-[var(--text-muted)]">Confidence</p>
+        <p className="text-sm font-bold" style={{ color }}>
           {pct >= 70 ? "High" : pct >= 50 ? "Medium" : "Low"}
         </p>
       </div>
@@ -131,15 +131,15 @@ export function SynthesisPanel({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-20 h-20 rounded-3xl bg-gradient-to-br from-sky-500/20 to-violet-500/20 border border-white/10 flex items-center justify-center mb-5"
+          className="w-20 h-20 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-center mb-5 text-[var(--accent-pink)]"
         >
-          <TrendingUp className="w-10 h-10 text-sky-400" />
+          <TrendingUp className="w-10 h-10" />
         </motion.div>
-        <h3 className="text-base font-semibold text-slate-300 mb-2">
+        <h3 className="text-base font-bold text-[var(--text-primary)] mb-2">
           Ready to Research
         </h3>
-        <p className="text-xs text-slate-600 max-w-xs leading-relaxed">
-          Enter a complex question on the left and watch five AI agents
+        <p className="text-xs text-[var(--text-secondary)] max-w-xs leading-relaxed">
+          Enter a complex question on the left and watch four AI agents
           collaborate to deliver a verified, cited answer — live.
         </p>
       </div>
@@ -149,15 +149,15 @@ export function SynthesisPanel({
   return (
     <div className="flex flex-col h-full">
       {/* Tab bar */}
-      <div className="flex items-center gap-1 mb-4 p-1 bg-white/[0.03] rounded-xl border border-white/7">
+      <div className="flex items-center gap-1 mb-4 p-1 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-subtle)]">
         {TABS.map(({ id, label, Icon, count }) => (
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
               tab === id
-                ? "bg-sky-600/25 text-sky-300 border border-sky-500/25"
-                : "text-slate-500 hover:text-slate-300"
+                ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
@@ -166,8 +166,8 @@ export function SynthesisPanel({
               <span
                 className={`px-1.5 py-0.5 rounded-full text-xs ${
                   tab === id
-                    ? "bg-sky-500/25 text-sky-300"
-                    : "bg-white/8 text-slate-600"
+                    ? "bg-white/20 text-white"
+                    : "bg-[var(--bg-card)] text-[var(--text-muted)]"
                 }`}
               >
                 {count}
@@ -183,7 +183,7 @@ export function SynthesisPanel({
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
-            className="mb-4 p-3 rounded-xl bg-white/[0.03] border border-white/7"
+            className="mb-4 p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)]"
           >
             <ConfidenceGauge value={confidence} />
           </motion.div>
@@ -219,7 +219,7 @@ export function SynthesisPanel({
               className="flex flex-col gap-2"
             >
               {citations.length === 0 ? (
-                <p className="text-xs text-slate-600 text-center py-10">
+                <p className="text-xs text-[var(--text-muted)] text-center py-10">
                   {status === "running"
                     ? "Gathering sources…"
                     : "No sources found"}
@@ -242,7 +242,7 @@ export function SynthesisPanel({
               className="flex flex-col gap-2"
             >
               {factChecks.length === 0 ? (
-                <p className="text-xs text-slate-600 text-center py-10">
+                <p className="text-xs text-[var(--text-muted)] text-center py-10">
                   {status === "running"
                     ? "Verifying claims…"
                     : "No fact checks available"}

@@ -4,6 +4,7 @@ import { useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,
@@ -19,10 +20,10 @@ import { SynthesisPanel } from "@/components/SynthesisPanel";
 import { Navbar } from "@/components/Navbar";
 
 const STATUS_CFG = {
-  idle: { label: "Ready", Icon: Shield, color: "text-slate-500" },
-  running: { label: "Multi-Agent Active", Icon: Cpu, color: "text-amber-400" },
-  completed: { label: "Complete & Verified", Icon: CheckCircle2, color: "text-emerald-400" },
-  failed: { label: "Failed", Icon: AlertCircle, color: "text-rose-400" },
+  idle: { label: "Ready", Icon: Shield, color: "text-[var(--text-muted)]" },
+  running: { label: "Multi-Agent Active", Icon: Cpu, color: "text-amber-500" },
+  completed: { label: "Complete & Verified", Icon: CheckCircle2, color: "text-emerald-500" },
+  failed: { label: "Failed", Icon: AlertCircle, color: "text-rose-500" },
 } as const;
 
 function DashboardContent() {
@@ -65,16 +66,16 @@ function DashboardContent() {
   const { label, Icon, color } = STATUS_CFG[status] ?? STATUS_CFG.idle;
 
   return (
-    <div className="h-screen bg-[#0a0a1a] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col overflow-hidden transition-colors duration-300">
       <Navbar />
 
       {/* Progress & Session Status bar */}
-      <div className="flex items-center justify-between px-5 py-2 border-b border-white/6 bg-white/[0.015] text-xs flex-shrink-0">
+      <div className="flex items-center justify-between px-5 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-xs flex-shrink-0">
         <div className="flex items-center gap-3">
-          <div className={`flex items-center gap-1.5 font-medium ${color}`}>
+          <div className={`flex items-center gap-1.5 font-semibold ${color}`}>
             {status === "running" ? (
               <motion.div
-                className="w-1.5 h-1.5 rounded-full bg-amber-400"
+                className="w-2 h-2 rounded-full bg-amber-400"
                 animate={{ opacity: [1, 0.3, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               />
@@ -85,15 +86,15 @@ function DashboardContent() {
           </div>
 
           {progressMessage && status === "running" && (
-            <div className="flex items-center gap-1.5 text-sky-300">
-              <Sparkles className="w-3 h-3 animate-spin" />
+            <div className="flex items-center gap-1.5 text-[var(--accent-sky)] font-medium">
+              <Sparkles className="w-3.5 h-3.5 animate-spin" />
               <span>{progressMessage}</span>
             </div>
           )}
         </div>
 
         {sessionId && (
-          <span className="text-[11px] text-slate-500 font-mono bg-white/4 px-2 py-0.5 rounded-md">
+          <span className="text-[11px] text-[var(--text-muted)] font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] px-2.5 py-0.5 rounded-lg">
             Session: {sessionId.slice(0, 8)}
           </span>
         )}
@@ -102,8 +103,8 @@ function DashboardContent() {
       {/* Main split grid */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel — query input + agent timeline */}
-        <div className="w-full md:w-[400px] xl:w-[440px] flex-shrink-0 flex flex-col border-r border-white/6 overflow-hidden">
-          <div className="p-4 border-b border-white/6 flex-shrink-0">
+        <div className="w-full md:w-[400px] xl:w-[440px] flex-shrink-0 flex flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-secondary)]/50 overflow-hidden">
+          <div className="p-4 border-b border-[var(--border-subtle)] flex-shrink-0">
             <QueryInput
               onSubmit={startResearch}
               isLoading={status === "running"}
@@ -116,28 +117,29 @@ function DashboardContent() {
             className="flex-1 overflow-y-auto p-4 scroll-smooth"
           >
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
                 Live Agent Activity
               </h2>
               {events.length > 0 && (
-                <span className="text-[11px] text-slate-600 font-mono">
-                  {events.length} events
+                <span className="text-[11px] font-mono text-[var(--accent-pink)] font-semibold">
+                  {events.length} event{events.length !== 1 ? "s" : ""}
                 </span>
               )}
             </div>
+
             <AgentTimeline events={events} status={status} />
           </div>
         </div>
 
-        {/* Right panel — synthesis report, sources, fact checks */}
-        <div className="flex-1 flex flex-col overflow-hidden bg-black/20">
+        {/* Right panel — Synthesis + Claims + Sources */}
+        <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-primary)]">
           <AnimatePresence>
             {error && (
               <motion.div
-                initial={{ opacity: 0, y: -8 }}
+                initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                className="mx-5 mt-4 flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs flex-shrink-0"
+                exit={{ opacity: 0, y: -10 }}
+                className="m-4 p-3 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-500 text-xs font-semibold flex items-center gap-2"
               >
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {error}
@@ -162,7 +164,7 @@ function DashboardContent() {
 
 export default function ResearchPage() {
   return (
-    <Suspense fallback={<div className="h-screen bg-[#0a0a1a] flex items-center justify-center text-slate-500 text-xs">Loading Live Research Dashboard...</div>}>
+    <Suspense fallback={<div className="h-screen bg-[var(--bg-primary)] flex items-center justify-center text-[var(--text-muted)] text-xs">Loading Live Research Dashboard...</div>}>
       <DashboardContent />
     </Suspense>
   );

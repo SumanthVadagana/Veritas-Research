@@ -9,8 +9,8 @@
   --bg-primary:    #09090d;
   --bg-secondary:  #12121a;
   --bg-tertiary:   #191924;
-  --bg-card:       rgba(236, 72, 153, 0.04);
-  --bg-card-hover: rgba(236, 72, 153, 0.08);
+  --bg-card:       #12121a;
+  --bg-card-hover: #1c1c28;
 
   --accent-pink:    #ec4899;
   --accent-rose:    #f43f5e;
@@ -18,24 +18,24 @@
   --accent-emerald: #10b981;
   --accent-amber:   #f59e0b;
 
-  --text-primary:   #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-muted:     #64748b;
+  --text-primary:   #ffffff;
+  --text-secondary: #e2e8f0;
+  --text-muted:     #94a3b8;
 
-  --border-subtle: rgba(236, 72, 153, 0.18);
-  --border-medium: rgba(236, 72, 153, 0.35);
+  --border-subtle: rgba(236, 72, 153, 0.2);
+  --border-medium: rgba(236, 72, 153, 0.4);
 
   --gradient-brand: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #a855f7 100%);
   --grid-color:     rgba(236, 72, 153, 0.04);
 }
 
-/* Light Mode: White & Crimson Red */
+/* Light Mode: White & Crimson Red (Ultra High Contrast Text) */
 html.light {
   --bg-primary:    #ffffff;
-  --bg-secondary:  #f8fafc;
-  --bg-tertiary:   #f1f5f9;
-  --bg-card:       rgba(220, 38, 38, 0.03);
-  --bg-card-hover: rgba(220, 38, 38, 0.07);
+  --bg-secondary:  #f1f5f9;
+  --bg-tertiary:   #e2e8f0;
+  --bg-card:       #f8fafc;
+  --bg-card-hover: #f1f5f9;
 
   --accent-pink:    #dc2626;
   --accent-rose:    #ef4444;
@@ -43,12 +43,12 @@ html.light {
   --accent-emerald: #059669;
   --accent-amber:   #d97706;
 
-  --text-primary:   #0f172a;
-  --text-secondary: #334155;
-  --text-muted:     #64748b;
+  --text-primary:   #000000;
+  --text-secondary: #0f172a;
+  --text-muted:     #475569;
 
-  --border-subtle: rgba(220, 38, 38, 0.16);
-  --border-medium: rgba(220, 38, 38, 0.32);
+  --border-subtle: #cbd5e1;
+  --border-medium: #94a3b8;
 
   --gradient-brand: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #b91c1c 100%);
   --grid-color:     rgba(220, 38, 38, 0.04);
@@ -66,7 +66,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
@@ -145,18 +145,19 @@ body {
   margin-top: 1.25rem;
   margin-bottom: 0.4rem;
 }
-.prose-veritas p { margin-bottom: 0.85rem; font-size: 0.875rem; }
-.prose-veritas ul, .prose-veritas ol { padding-left: 1.25rem; margin-bottom: 0.85rem; }
-.prose-veritas li { margin-bottom: 0.3rem; font-size: 0.875rem; }
-.prose-veritas strong { color: var(--text-primary); font-weight: 600; }
-.prose-veritas a { color: var(--accent-pink); text-decoration: none; }
+.prose-veritas p { margin-bottom: 0.85rem; font-size: 0.875rem; color: var(--text-secondary); }
+.prose-veritas ul, .prose-veritas ol { padding-left: 1.25rem; margin-bottom: 0.85rem; color: var(--text-secondary); }
+.prose-veritas li { margin-bottom: 0.3rem; font-size: 0.875rem; color: var(--text-secondary); }
+.prose-veritas strong { color: var(--text-primary); font-weight: 700; }
+.prose-veritas a { color: var(--accent-pink); text-decoration: none; font-weight: 600; }
 .prose-veritas a:hover { text-decoration: underline; }
 .prose-veritas code {
-  background: var(--bg-card-hover);
+  background: var(--bg-secondary);
   color: var(--accent-pink);
   padding: 0.1em 0.35em;
   border-radius: 4px;
   font-size: 0.82rem;
+  border: 1px solid var(--border-subtle);
 }
 .prose-veritas blockquote {
   border-left: 3px solid var(--accent-pink);

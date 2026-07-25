@@ -63,7 +63,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
             placeholder="Ask any complex research question…"
             rows={3}
             disabled={isLoading}
-            className="w-full bg-transparent px-4 pt-4 pb-14 text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none outline-none leading-relaxed"
+            className="w-full bg-transparent px-4 pt-4 pb-14 text-sm font-semibold text-[var(--text-primary)] placeholder-[var(--text-muted)] resize-none outline-none leading-relaxed"
           />
 
           {/* Toolbar */}
@@ -73,13 +73,13 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
               <button
                 type="button"
                 onClick={() => setDepthOpen((o) => !o)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)] transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold text-[var(--text-primary)] bg-[var(--bg-secondary)] border border-[var(--border-subtle)] hover:bg-[var(--bg-card-hover)] transition-colors shadow-sm"
               >
-                <Zap className="w-3 h-3 text-[var(--accent-pink)]" />
+                <Zap className="w-3.5 h-3.5 text-[var(--accent-pink)]" />
                 <span>
                   Depth: {depth} — {DEPTH_LABELS[depth]}
                 </span>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3 text-[var(--text-muted)]" />
               </button>
 
               <AnimatePresence>
@@ -102,11 +102,11 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                         className={`flex items-center justify-between w-full px-3 py-1.5 rounded-lg text-xs transition-colors ${
                           depth === d
                             ? "bg-[var(--accent-pink)] text-white font-bold"
-                            : "text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] hover:text-[var(--text-primary)]"
+                            : "text-[var(--text-primary)] font-semibold hover:bg-[var(--bg-card-hover)]"
                         }`}
                       >
-                        <span className="font-semibold">{d}</span>
-                        <span className="text-xs">
+                        <span className="font-bold">{d}</span>
+                        <span className="text-xs font-medium">
                           {DEPTH_LABELS[d]}
                         </span>
                       </button>
@@ -122,7 +122,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                 <button
                   type="button"
                   onClick={onReset}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-rose-500 hover:bg-rose-500/10 transition-colors"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-500/10 transition-colors"
                 >
                   <X className="w-3 h-3" />
                   Cancel
@@ -132,7 +132,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                 type="submit"
                 id="research-submit"
                 disabled={!query.trim() || isLoading}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--accent-pink)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-md"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent-pink)] hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-extrabold transition-all shadow-md"
               >
                 <Search className="w-3.5 h-3.5" />
                 {isLoading ? "Researching…" : "Research"}
@@ -141,7 +141,7 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
           </div>
         </div>
 
-        <p className="mt-1.5 text-[11px] text-[var(--text-muted)] text-right font-mono">
+        <p className="mt-1.5 text-[11px] text-[var(--text-muted)] font-bold text-right font-mono">
           Ctrl+Enter to submit
         </p>
       </form>
@@ -149,10 +149,10 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
       {/* Examples */}
       {!isLoading && (
         <div>
-          <p className="text-xs text-[var(--text-muted)] font-bold uppercase tracking-wider mb-1.5">
-            Examples
+          <p className="text-xs text-[var(--text-primary)] font-extrabold uppercase tracking-wider mb-2">
+            EXAMPLES
           </p>
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1">
             {EXAMPLES.map((q, i) => (
               <button
                 key={i}
@@ -160,9 +160,9 @@ export function QueryInput({ onSubmit, isLoading, onReset }: QueryInputProps) {
                   setQuery(q);
                   textareaRef.current?.focus();
                 }}
-                className="text-left text-xs text-[var(--text-secondary)] hover:text-[var(--accent-pink)] transition-colors py-1 px-2 rounded-lg hover:bg-[var(--bg-card-hover)] truncate"
+                className="text-left text-xs font-bold text-[var(--text-secondary)] hover:text-[var(--accent-pink)] transition-colors py-1.5 px-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] hover:border-[var(--accent-pink)] truncate"
               >
-                <span className="text-[var(--text-muted)] mr-1.5">›</span>
+                <span className="text-[var(--accent-pink)] font-bold mr-1.5">›</span>
                 {q}
               </button>
             ))}

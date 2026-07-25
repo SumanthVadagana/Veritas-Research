@@ -23,42 +23,42 @@ const AGENT_CFG: Record<
   { color: string; bg: string; ring: string; label: string; Icon: React.ElementType }
 > = {
   Planner: {
-    color: "text-indigo-500",
+    color: "text-indigo-600 dark:text-indigo-400",
     bg: "bg-indigo-500/15",
     ring: "ring-indigo-500/30",
     label: "Planner",
     Icon: Brain,
   },
   Researcher: {
-    color: "text-[var(--accent-sky)]",
+    color: "text-sky-600 dark:text-[var(--accent-sky)]",
     bg: "bg-sky-500/15",
     ring: "ring-sky-500/30",
     label: "Researcher Agent",
     Icon: Search,
   },
   Verifier: {
-    color: "text-[var(--accent-emerald)]",
+    color: "text-emerald-600 dark:text-[var(--accent-emerald)]",
     bg: "bg-emerald-500/15",
     ring: "ring-emerald-500/30",
     label: "Verifier Agent",
     Icon: ShieldCheck,
   },
   FactChecker: {
-    color: "text-[var(--accent-emerald)]",
+    color: "text-emerald-600 dark:text-[var(--accent-emerald)]",
     bg: "bg-emerald-500/15",
     ring: "ring-emerald-500/30",
     label: "Verifier Agent",
     Icon: ShieldCheck,
   },
   Critic: {
-    color: "text-amber-500",
+    color: "text-amber-600 dark:text-amber-400",
     bg: "bg-amber-500/15",
     ring: "ring-amber-500/30",
     label: "Critic Agent",
     Icon: AlertCircle,
   },
   Synthesizer: {
-    color: "text-[var(--accent-pink)]",
+    color: "text-pink-600 dark:text-[var(--accent-pink)]",
     bg: "bg-pink-500/15",
     ring: "ring-pink-500/30",
     label: "Synthesizer Agent",
@@ -84,7 +84,7 @@ function TimelineItem({
   isRunning: boolean;
 }) {
   const cfg = AGENT_CFG[event.agent] ?? {
-    color: "text-[var(--text-muted)]",
+    color: "text-[var(--text-primary)]",
     bg: "bg-[var(--bg-card)]",
     ring: "ring-[var(--border-subtle)]",
     label: event.agent,
@@ -119,10 +119,10 @@ function TimelineItem({
       {/* Body */}
       <div className="flex-1 pb-4 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className={`text-xs font-bold ${cfg.color}`}>
+          <span className={`text-xs font-extrabold ${cfg.color}`}>
             {cfg.label}
           </span>
-          <span className="text-[10px] text-[var(--text-muted)] font-mono">
+          <span className="text-[10px] text-[var(--text-muted)] font-mono font-semibold">
             {event.timestamp.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
@@ -130,7 +130,7 @@ function TimelineItem({
             })}
           </span>
         </div>
-        <p className="text-xs text-[var(--text-primary)] leading-relaxed">{event.message}</p>
+        <p className="text-xs font-semibold text-[var(--text-primary)] leading-relaxed">{event.message}</p>
 
         {/* Sub-queries list if present */}
         {Array.isArray(event.metadata?.sub_queries) && (
@@ -138,7 +138,7 @@ function TimelineItem({
             {(event.metadata!.sub_queries as string[]).map((q, i) => (
               <li key={i} className="flex items-start gap-1.5 bg-[var(--bg-card)] p-1.5 rounded-md border border-[var(--border-subtle)]">
                 <span className="text-[var(--accent-pink)] mt-0.5 text-xs font-bold">›</span>
-                <span className="text-xs text-[var(--text-secondary)] leading-snug">{q}</span>
+                <span className="text-xs font-semibold text-[var(--text-secondary)] leading-snug">{q}</span>
               </li>
             ))}
           </ul>
@@ -154,10 +154,10 @@ export function AgentTimeline({ events, status }: AgentTimelineProps) {
   if (events.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-14 text-center">
-        <div className="w-14 h-14 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] flex items-center justify-center mb-3 text-[var(--text-muted)]">
+        <div className="w-14 h-14 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-center mb-3 text-[var(--text-secondary)] shadow-sm">
           <Target className="w-7 h-7" />
         </div>
-        <p className="text-xs text-[var(--text-secondary)] leading-relaxed max-w-[200px]">
+        <p className="text-xs font-bold text-[var(--text-primary)] leading-relaxed max-w-[200px]">
           Enter a topic to watch the 4 AI Agents collaborate in real-time
         </p>
       </div>
@@ -197,7 +197,7 @@ export function AgentTimeline({ events, status }: AgentTimelineProps) {
               }}
             />
           ))}
-          <span className="text-xs text-[var(--text-muted)] font-semibold">Agents evaluating evidence…</span>
+          <span className="text-xs text-[var(--text-primary)] font-bold">Agents evaluating evidence…</span>
         </motion.div>
       )}
     </div>

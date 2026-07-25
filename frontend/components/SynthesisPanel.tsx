@@ -58,15 +58,15 @@ function ConfidenceGauge({ value }: { value: number }) {
           />
         </svg>
         <span
-          className="absolute inset-0 flex items-center justify-center text-xs font-bold"
+          className="absolute inset-0 flex items-center justify-center text-xs font-extrabold"
           style={{ color }}
         >
           {pct}
         </span>
       </div>
       <div>
-        <p className="text-xs text-[var(--text-muted)]">Confidence</p>
-        <p className="text-sm font-bold" style={{ color }}>
+        <p className="text-xs font-semibold text-[var(--text-muted)]">Confidence</p>
+        <p className="text-sm font-extrabold" style={{ color }}>
           {pct >= 70 ? "High" : pct >= 50 ? "Medium" : "Low"}
         </p>
       </div>
@@ -131,14 +131,14 @@ export function SynthesisPanel({
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
-          className="w-20 h-20 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-center mb-5 text-[var(--accent-pink)]"
+          className="w-20 h-20 rounded-3xl bg-[var(--bg-card)] border border-[var(--border-subtle)] flex items-center justify-center mb-5 text-[var(--accent-pink)] shadow-md"
         >
           <TrendingUp className="w-10 h-10" />
         </motion.div>
-        <h3 className="text-base font-bold text-[var(--text-primary)] mb-2">
+        <h3 className="text-base font-extrabold text-[var(--text-primary)] mb-2">
           Ready to Research
         </h3>
-        <p className="text-xs text-[var(--text-secondary)] max-w-xs leading-relaxed">
+        <p className="text-xs font-semibold text-[var(--text-secondary)] max-w-xs leading-relaxed">
           Enter a complex question on the left and watch four AI agents
           collaborate to deliver a verified, cited answer — live.
         </p>
@@ -154,20 +154,20 @@ export function SynthesisPanel({
           <button
             key={id}
             onClick={() => setTab(id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-extrabold transition-all duration-200 ${
               tab === id
                 ? "bg-[var(--accent-pink)] text-white shadow-sm"
-                : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
             }`}
           >
             <Icon className="w-3.5 h-3.5" />
             {label}
             {count != null && count > 0 && (
               <span
-                className={`px-1.5 py-0.5 rounded-full text-xs ${
+                className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${
                   tab === id
                     ? "bg-white/20 text-white"
-                    : "bg-[var(--bg-card)] text-[var(--text-muted)]"
+                    : "bg-[var(--bg-card)] text-[var(--text-primary)]"
                 }`}
               >
                 {count}
@@ -219,7 +219,7 @@ export function SynthesisPanel({
               className="flex flex-col gap-2"
             >
               {citations.length === 0 ? (
-                <p className="text-xs text-[var(--text-muted)] text-center py-10">
+                <p className="text-xs font-bold text-[var(--text-primary)] text-center py-10">
                   {status === "running"
                     ? "Gathering sources…"
                     : "No sources found"}
@@ -242,7 +242,7 @@ export function SynthesisPanel({
               className="flex flex-col gap-2"
             >
               {factChecks.length === 0 ? (
-                <p className="text-xs text-[var(--text-muted)] text-center py-10">
+                <p className="text-xs font-bold text-[var(--text-primary)] text-center py-10">
                   {status === "running"
                     ? "Verifying claims…"
                     : "No fact checks available"}

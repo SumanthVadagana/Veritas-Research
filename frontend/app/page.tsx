@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import {
   Brain,
@@ -18,6 +18,10 @@ import {
   LogIn,
   UserPlus,
   ArrowRight,
+  Mail,
+  Lock,
+  User,
+  ArrowUpRight,
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -58,9 +62,43 @@ const FEATURES = [
 
 export default function LandingPage() {
   const router = useRouter();
-  const { user, isAuthenticated, openAuthModal } = useAuth();
+  const { user, isAuthenticated, login, signup } = useAuth();
+  
+  // Auth Form State
+  const [authTab, setAuthTab] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [guestAllowed, setGuestAllowed] = useState(false);
+
+  // Search State
   const [topic, setTopic] = useState("");
   const [depth, setDepth] = useState<"quick" | "standard" | "deep">("standard");
+
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+
+    if (!email || !email.includes("@")) {
+      setAuthError("Please enter a valid email address.");
+      return;
+    }
+    if (!password || password.length < 4) {
+      setAuthError("Password must be at least 4 characters long.");
+      return;
+    }
+
+    if (authTab === "signup") {
+      if (!name.trim()) {
+        setAuthError("Please enter your full name.");
+        return;
+      }
+      signup(email, name);
+    } else {
+      login(email);
+    }
+  };
 
   const handleStartResearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +109,152 @@ export default function LandingPage() {
     router.push(`/research?topic=${encodeURIComponent(topic.trim())}&depth=${depth}`);
   };
 
+  // If NOT authenticated and guest mode not manually bypassed -> Render Dedicated Login Page
+  if (!isAuthenticated && !guestAllowed) {
+    return (
+      <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] grid-bg flex flex-col justify-between transition-colors duration-300">
+        <Navbar />
+
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-6 py-12">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="w-full max-w-md bg-[var(--bg-secondary)] border border-[var(--border-subtle)] rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden"
+          >
+            {/* Top brand header */}
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--gradient-brand)] flex items-center justify-center mx-auto mb-3 shadow-md">
+                <Shield className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] tracking-tight">
+                Veritas <span className="gradient-text">Research</span>
+              </h1>
+              <p className="text-xs text-[var(--text-muted)] font-semibold mt-1">
+                {authTab === "signin"
+                  ? "Sign in to access the Multi-Agent Research Engine"
+                  : "Create your account to start fact-verifying research"}
+              </p>
+            </div>
+
+            {/* Auth Tab Switcher */}
+            <div className="flex items-center gap-1 p-1 bg-[var(--bg-card)] rounded-2xl border border-[var(--border-subtle)] mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthTab("signin");
+                  setAuthError("");
+                }}
+                className={`flex-1 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                  authTab === "signin"
+                    ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthTab("signup");
+                  setAuthError("");
+                }}
+                className={`flex-1 py-2 rounded-xl text-xs font-extrabold transition-all ${
+                  authTab === "signup"
+                    ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
+
+            {authError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-bold text-center">
+                {authError}
+              </div>
+            )}
+
+            {/* Login Form */}
+            <form onSubmit={handleAuthSubmit} className="flex flex-col gap-4">
+              {authTab === "signup" && (
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-primary)] mb-1.5">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-3.5 w-4 h-4 text-[var(--text-muted)]" />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Jane Doe"
+                      className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl px-10 py-3 text-xs font-semibold text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--accent-pink)] transition-colors"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-primary)] mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-3.5 w-4 h-4 text-[var(--text-muted)]" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl px-10 py-3 text-xs font-semibold text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--accent-pink)] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-primary)] mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-3.5 w-4 h-4 text-[var(--text-muted)]" />
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-xl px-10 py-3 text-xs font-semibold text-[var(--text-primary)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--accent-pink)] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="mt-2 w-full py-3 rounded-xl bg-[var(--accent-pink)] hover:opacity-90 text-white text-xs font-extrabold flex items-center justify-center gap-2 transition-all shadow-md"
+              >
+                <span>{authTab === "signup" ? "Create Free Account" : "Sign In to Dashboard"}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+
+            {/* Bypassing Guest Link */}
+            <div className="mt-6 pt-4 border-t border-[var(--border-subtle)] text-center">
+              <button
+                type="button"
+                onClick={() => setGuestAllowed(true)}
+                className="text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--accent-pink)] transition-colors inline-flex items-center gap-1"
+              >
+                Explore Demo as Guest <ArrowUpRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        </div>
+
+        <Footer />
+      </div>
+    );
+  }
+
+  // Once authenticated or guest mode chosen -> Render Main Research Engine
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] grid-bg overflow-hidden flex flex-col justify-between transition-colors duration-300">
       <div>
@@ -84,7 +268,7 @@ export default function LandingPage() {
             transition={{ duration: 0.5 }}
           >
             {/* Top pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-semibold text-[var(--accent-pink)] mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-card)] text-xs font-bold text-[var(--accent-pink)] mb-6">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Multi-Agent AI Fact Verification System</span>
             </div>
@@ -94,54 +278,17 @@ export default function LandingPage() {
               <span className="gradient-text">Research Intelligence</span>
             </h1>
 
-            <p className="max-w-2xl mx-auto text-sm sm:text-base text-[var(--text-secondary)] mb-8 leading-relaxed">
+            <p className="max-w-2xl mx-auto text-sm sm:text-base font-semibold text-[var(--text-secondary)] mb-8 leading-relaxed">
               Verify facts, analyze claims, and synthesize evidence using 4 collaborating AI agents in real time.
             </p>
           </motion.div>
-
-          {/* Authentication Banner for visitors */}
-          {!isAuthenticated && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="max-w-xl mx-auto mb-10 p-5 rounded-3xl border border-[var(--border-subtle)] bg-[var(--bg-secondary)] shadow-xl text-left flex flex-col sm:flex-row items-center justify-between gap-4"
-            >
-              <div>
-                <h2 className="text-sm font-bold text-[var(--text-primary)] mb-1 flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-[var(--accent-pink)]" />
-                  Sign In to Save Your Research
-                </h2>
-                <p className="text-xs text-[var(--text-secondary)]">
-                  Log in or create a free account to track history and access pro research depth.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                <button
-                  onClick={() => openAuthModal("signin")}
-                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-card-hover)] text-[var(--text-primary)] text-xs font-bold transition-all flex items-center justify-center gap-1.5"
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  Sign In
-                </button>
-                <button
-                  onClick={() => openAuthModal("signup")}
-                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-[var(--accent-pink)] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-md"
-                >
-                  <UserPlus className="w-3.5 h-3.5" />
-                  Sign Up
-                </button>
-              </div>
-            </motion.div>
-          )}
 
           {/* Search Box */}
           <motion.form
             onSubmit={handleStartResearch}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            transition={{ delay: 0.2 }}
             className="max-w-2xl mx-auto"
           >
             <div className="p-2 sm:p-2.5 rounded-3xl border border-[var(--border-medium)] bg-[var(--bg-secondary)] shadow-2xl flex flex-col sm:flex-row gap-2">
@@ -150,11 +297,11 @@ export default function LandingPage() {
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="Enter any claim or topic (e.g., Is coffee healthy for memory?)..."
-                className="flex-1 px-4 py-3 bg-transparent text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
+                className="flex-1 px-4 py-3 bg-transparent text-sm font-semibold text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none"
               />
               <button
                 type="submit"
-                className="px-6 py-3 rounded-2xl bg-[var(--accent-pink)] hover:opacity-95 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
+                className="px-6 py-3 rounded-2xl bg-[var(--accent-pink)] hover:opacity-95 text-white font-extrabold text-sm transition-all flex items-center justify-center gap-2 shadow-lg"
               >
                 <span>Start Research</span>
                 <ArrowRight className="w-4 h-4" />
@@ -174,10 +321,10 @@ export default function LandingPage() {
                 <div className="w-10 h-10 rounded-xl bg-[var(--accent-pink)]/10 flex items-center justify-center mb-4 text-[var(--accent-pink)]">
                   <Icon className="w-5 h-5" />
                 </div>
-                <h3 className="text-base font-bold text-[var(--text-primary)] mb-2">
+                <h3 className="text-base font-extrabold text-[var(--text-primary)] mb-2">
                   {title}
                 </h3>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                <p className="text-xs font-semibold text-[var(--text-secondary)] leading-relaxed">
                   {desc}
                 </p>
               </div>

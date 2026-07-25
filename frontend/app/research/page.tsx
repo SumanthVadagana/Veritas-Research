@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield,

@@ -8,10 +8,12 @@ class Settings(BaseSettings):
     # Database — SQLite for dev, PostgreSQL for prod
     DATABASE_URL: str = "sqlite+aiosqlite:///./veritas.db"
 
-    # Google Gemini — Updated to valid active Gemini models
+    # Google Gemini — Active Gemini models & Key Failover
     GEMINI_API_KEY: str = ""
+    GEMINI_API_KEY_2: str = ""
     GEMINI_FLASH_MODEL: str = "gemini-2.0-flash"
     GEMINI_PRO_MODEL: str = "gemini-2.0-flash"
+
 
     # Tavily
     TAVILY_API_KEY: str = ""

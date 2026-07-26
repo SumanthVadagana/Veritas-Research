@@ -133,8 +133,14 @@ def _parse_analysis_json(raw_text: str, image_bytes: bytes) -> Dict[str, Any]:
 
 
 async def analyze_image_with_gemini(image_bytes: bytes, mime_type: str) -> dict:
-    """Use Gemini Vision to analyze image, extract text and compute realness score."""
-    if not settings.GEMINI_API_KEY or settings.GEMINI_API_KEY == "demo":
+    """Use Gemini Vision to analyze image, extract text and compute realness score with multi-key failover."""
+    keys = []
+    if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "demo":
+        keys.append(settings.GEMINI_API_KEY)
+    if settings.GEMINI_API_KEY_2 and settings.GEMINI_API_KEY_2 != "demo":
+        keys.append(settings.GEMINI_API_KEY_2)
+
+    if not keys:
         score = _compute_fallback_score(image_bytes)
         return {
             "extracted_text": "Demo mode: Set GEMINI_API_KEY for full AI OCR.",
@@ -148,46 +154,52 @@ async def analyze_image_with_gemini(image_bytes: bytes, mime_type: str) -> dict:
             "fact_checkable": False,
         }
 
-    try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
+    last_error = None
+    for key_index, key in enumerate(keys):
+        try:
+            genai.configure(api_key=key)
+            model = genai.GenerativeModel(model_name=settings.GEMINI_FLASH_MODEL)
 
-        # Use standard model initialization without unsupported parameters
-        model = genai.GenerativeModel(model_name=settings.GEMINI_FLASH_MODEL)
-
-        image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-        image_part = {
-            "inline_data": {
-                "mime_type": mime_type,
-                "data": image_b64,
+            image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+            image_part = {
+                "inline_data": {
+                    "mime_type": mime_type,
+                    "data": image_b64,
+                }
             }
-        }
 
-        # Safe multimodal call
-        response = await model.generate_content_async(
-            [IMAGE_ANALYSIS_PROMPT, image_part],
-            generation_config=genai.types.GenerationConfig(
-                max_output_tokens=1200,
-                temperature=0.2,
-            ),
-        )
+            response = await model.generate_content_async(
+                [IMAGE_ANALYSIS_PROMPT, image_part],
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=1200,
+                    temperature=0.2,
+                ),
+            )
 
-        raw_text = response.text or ""
-        return _parse_analysis_json(raw_text, image_bytes)
+            raw_text = response.text or ""
+            return _parse_analysis_json(raw_text, image_bytes)
 
-    except Exception as exc:
-        logger.error("Gemini Vision analysis error: %s", exc)
-        score = _compute_fallback_score(image_bytes)
-        return {
-            "extracted_text": "",
-            "image_description": "Image uploaded successfully. Analysis completed.",
-            "realness_score": score,
-            "realness_label": "Genuine" if score >= 75 else "Uncertain",
-            "manipulation_signals": [],
-            "ai_generation_indicators": [],
-            "metadata_notes": f"Analyzed image file ({len(image_bytes)} bytes).",
-            "content_warnings": [],
-            "fact_checkable": False,
-        }
+        except Exception as exc:
+            last_error = exc
+            logger.warning("Gemini Vision Key #%d failed: %s", key_index + 1, exc)
+            if key_index < len(keys) - 1:
+                logger.info("Switching to secondary Gemini API Key for vision analysis...")
+                continue
+
+    logger.error("All Gemini Vision API keys failed (%s). Using visual score fallback.", last_error)
+    score = _compute_fallback_score(image_bytes)
+    return {
+        "extracted_text": "",
+        "image_description": "Image uploaded successfully. Visual analysis completed.",
+        "realness_score": score,
+        "realness_label": "Genuine" if score >= 75 else "Uncertain",
+        "manipulation_signals": [],
+        "ai_generation_indicators": [],
+        "metadata_notes": f"Analyzed image file ({len(image_bytes)} bytes).",
+        "content_warnings": [],
+        "fact_checkable": False,
+    }
+
 
 
 @router.post("/analyze-image")

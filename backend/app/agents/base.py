@@ -22,12 +22,14 @@ class BaseAgent:
         self.name = name
         self.model = model or settings.GEMINI_FLASH_MODEL
 
-    def _configure_api(self) -> bool:
-        """Configure Gemini API key if present."""
+    def _get_api_keys(self) -> list:
+        """Return list of non-empty configured Gemini API keys."""
+        keys = []
         if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "demo":
-            genai.configure(api_key=settings.GEMINI_API_KEY)
-            return True
-        return False
+            keys.append(settings.GEMINI_API_KEY)
+        if settings.GEMINI_API_KEY_2 and settings.GEMINI_API_KEY_2 != "demo":
+            keys.append(settings.GEMINI_API_KEY_2)
+        return keys
 
     async def call(
         self,
@@ -35,55 +37,69 @@ class BaseAgent:
         user: str,
         max_tokens: int = 2048,
     ) -> str:
-        """Call the Google Gemini API with automatic rate-limit retries."""
-        if not self._configure_api():
+        """Call Google Gemini API with multi-key failover and retries."""
+        keys = self._get_api_keys()
+        if not keys:
             logger.warning(
                 "%s: GEMINI_API_KEY missing — utilizing demo response mode", self.name
             )
             return self._mock_response(user)
 
         last_error = None
-        for attempt in range(3):
-            try:
-                generative_model = genai.GenerativeModel(
-                    model_name=self.model,
-                    system_instruction=system,
-                )
 
-                generation_config = genai.types.GenerationConfig(
-                    max_output_tokens=max_tokens,
-                    temperature=0.2,
-                )
+        # Try key 1 then key 2 if key 1 encounters quota/rate limit/error
+        for key_index, key in enumerate(keys):
+            genai.configure(api_key=key)
 
-                response = await generative_model.generate_content_async(
-                    user,
-                    generation_config=generation_config,
-                )
-                return response.text
-            except Exception as exc:
-                last_error = exc
-                err_str = str(exc).lower()
-                logger.warning(
-                    "%s Gemini API attempt %d failed: %s", self.name, attempt + 1, exc
-                )
+            for attempt in range(2):
+                try:
+                    generative_model = genai.GenerativeModel(
+                        model_name=self.model,
+                        system_instruction=system,
+                    )
 
-                # If rate-limited (429), wait before retrying
-                if "429" in err_str or "quota" in err_str or "resourceexhausted" in err_str:
-                    await asyncio.sleep(2 * (attempt + 1))
-                    continue
-                # If model 404, fallback to gemini-2.0-flash
-                elif "404" in err_str and self.model != "gemini-2.0-flash":
-                    self.model = "gemini-2.0-flash"
-                    continue
-                else:
-                    break
+                    generation_config = genai.types.GenerationConfig(
+                        max_output_tokens=max_tokens,
+                        temperature=0.2,
+                    )
+
+                    response = await generative_model.generate_content_async(
+                        user,
+                        generation_config=generation_config,
+                    )
+                    return response.text
+                except Exception as exc:
+                    last_error = exc
+                    err_str = str(exc).lower()
+                    logger.warning(
+                        "%s Gemini Key #%d attempt %d failed: %s",
+                        self.name,
+                        key_index + 1,
+                        attempt + 1,
+                        exc,
+                    )
+
+                    # If rate-limited or quota error and there is a secondary key, break to try secondary key immediately!
+                    if ("429" in err_str or "quota" in err_str or "resourceexhausted" in err_str) and key_index < len(keys) - 1:
+                        logger.info("%s switching to secondary Gemini API key immediately...", self.name)
+                        break
+
+                    if "429" in err_str or "quota" in err_str or "resourceexhausted" in err_str:
+                        await asyncio.sleep(1.5 * (attempt + 1))
+                        continue
+                    elif "404" in err_str and self.model != "gemini-2.0-flash":
+                        self.model = "gemini-2.0-flash"
+                        continue
+                    else:
+                        break
 
         logger.error(
-            "%s Google Gemini API quota/error exhausted after retries (%s). Using safe fallback.",
+            "%s Google Gemini API keys exhausted after retries (%s). Using safe fallback.",
             self.name,
             last_error,
         )
         return self._mock_response(user)
+
 
     async def call_json(
         self,

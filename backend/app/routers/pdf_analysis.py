@@ -99,59 +99,67 @@ The research_query should be specific and searchable."""
 
 
 async def extract_claims_with_gemini(text: str, filename: str) -> dict:
-    """Use Gemini to intelligently extract claims and create a research query from PDF text."""
+    """Use Gemini to intelligently extract claims and create a research query from PDF text with multi-key failover."""
+    keys = []
+    if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "demo":
+        keys.append(settings.GEMINI_API_KEY)
+    if settings.GEMINI_API_KEY_2 and settings.GEMINI_API_KEY_2 != "demo":
+        keys.append(settings.GEMINI_API_KEY_2)
 
-    if not settings.GEMINI_API_KEY or settings.GEMINI_API_KEY == "demo":
-        # Demo fallback — basic extraction
+    if not keys:
         lines = [l.strip() for l in text.split("\n") if len(l.strip()) > 40][:5]
         return {
             "document_title": filename.replace(".pdf", "").replace("_", " ").title(),
             "document_type": "other",
-            "main_topic": "Document analysis (demo mode - set GEMINI_API_KEY for full analysis)",
+            "main_topic": "Document analysis (demo mode)",
             "research_query": text[:500] if text else "No text extracted",
             "key_claims": [{"claim": l, "importance": "medium", "page_hint": 1} for l in lines[:5]],
-            "summary": "Demo mode active. Set GEMINI_API_KEY to enable real claim extraction.",
+            "summary": "Demo mode active.",
             "red_flags": [],
             "language": "unknown",
             "word_count_estimate": len(text.split()),
         }
 
-    try:
-        genai.configure(api_key=settings.GEMINI_API_KEY)
-        model = genai.GenerativeModel(
-            model_name=settings.GEMINI_FLASH_MODEL,
-            system_instruction="You are an expert fact-checker. Always return valid JSON only.",
-        )
+    truncated_text = text[:8000]
+    if len(text) > 8000:
+        truncated_text += f"\n\n[... document continues, total {len(text)} characters ...]"
 
-        # Truncate text to ~8000 chars to stay within token limits
-        truncated_text = text[:8000]
-        if len(text) > 8000:
-            truncated_text += f"\n\n[... document continues, total {len(text)} characters ...]"
+    user_prompt = (
+        f"Filename: {filename}\n\n"
+        f"Document Text:\n{truncated_text}\n\n"
+        f"{PDF_CLAIM_EXTRACTION_PROMPT}"
+    )
 
-        user_prompt = (
-            f"Filename: {filename}\n\n"
-            f"Document Text:\n{truncated_text}\n\n"
-            f"{PDF_CLAIM_EXTRACTION_PROMPT}"
-        )
+    last_error = None
+    for key_index, key in enumerate(keys):
+        try:
+            genai.configure(api_key=key)
+            model = genai.GenerativeModel(
+                model_name=settings.GEMINI_FLASH_MODEL,
+                system_instruction="You are an expert fact-checker. Always return valid JSON only.",
+            )
 
-        response = await model.generate_content_async(
-            user_prompt,
-            generation_config=genai.types.GenerationConfig(
-                max_output_tokens=1500,
-                temperature=0.1,
-            ),
-        )
+            response = await model.generate_content_async(
+                user_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=1500,
+                    temperature=0.1,
+                ),
+            )
 
-        parsed = BaseAgent.extract_json(response.text)
-        if parsed and isinstance(parsed, dict):
-            return parsed
+            parsed = BaseAgent.extract_json(response.text)
+            if parsed and isinstance(parsed, dict):
+                return parsed
 
-        logger.warning("Gemini PDF claim extraction returned non-JSON: %s", response.text[:200])
-        return _fallback_claims(text, filename)
+        except Exception as exc:
+            last_error = exc
+            logger.warning("PDF Gemini Key #%d failed: %s", key_index + 1, exc)
+            if key_index < len(keys) - 1:
+                logger.info("Switching to secondary Gemini API key for PDF analysis...")
+                continue
 
-    except Exception as exc:
-        logger.error("Gemini PDF claim extraction error: %s", exc)
-        return _fallback_claims(text, filename)
+    return _fallback_claims(text, filename)
+
 
 
 def _fallback_claims(text: str, filename: str) -> dict:

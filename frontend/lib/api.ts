@@ -154,3 +154,38 @@ export async function analyzeImage(file: File): Promise<ImageAnalysisResult> {
   return res.json();
 }
 
+export interface PdfAnalysisResult {
+  session_id: string | null;
+  filename: string;
+  page_count: number;
+  char_count: number;
+  word_count: number;
+  document_title: string;
+  document_type: string;
+  main_topic: string;
+  summary: string;
+  research_query: string;
+  key_claims: Array<{
+    claim: string;
+    importance: "high" | "medium" | "low";
+    page_hint: number;
+  }>;
+  red_flags: string[];
+  language: string;
+  extracted_text_preview: string;
+  fact_checkable: boolean;
+}
+
+export async function analyzePdf(file: File): Promise<PdfAnalysisResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${API_URL}/api/analyze-pdf`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ detail: "PDF analysis failed" }));
+    throw new Error(errData.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}

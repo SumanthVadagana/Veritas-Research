@@ -14,6 +14,7 @@ import {
   Sparkles,
   ImageIcon,
   TextCursorInput,
+  FileText,
 } from "lucide-react";
 import { useResearchStream } from "@/hooks/useResearchStream";
 import { QueryInput } from "@/components/QueryInput";
@@ -21,6 +22,7 @@ import { AgentTimeline } from "@/components/AgentTimeline";
 import { SynthesisPanel } from "@/components/SynthesisPanel";
 import { Navbar } from "@/components/Navbar";
 import { ImageUpload } from "@/components/ImageUpload";
+import { PdfUpload } from "@/components/PdfUpload";
 
 const STATUS_CFG = {
   idle: { label: "Ready", Icon: Shield, color: "text-[var(--text-muted)]" },
@@ -29,7 +31,13 @@ const STATUS_CFG = {
   failed: { label: "Failed", Icon: AlertCircle, color: "text-rose-500" },
 } as const;
 
-type InputMode = "text" | "image";
+type InputMode = "text" | "image" | "pdf";
+
+const INPUT_TABS: { id: InputMode; label: string; Icon: React.ElementType; accent: string }[] = [
+  { id: "text",  label: "Text",  Icon: TextCursorInput, accent: "bg-[var(--accent-pink)]" },
+  { id: "image", label: "Image", Icon: ImageIcon,       accent: "bg-purple-500" },
+  { id: "pdf",   label: "PDF",   Icon: FileText,        accent: "bg-blue-500" },
+];
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -72,12 +80,9 @@ function DashboardContent() {
     el.scrollTop = el.scrollHeight;
   }, [events]);
 
-  // When image analysis completes and has a session_id, connect to SSE stream
-  const handleImageTextExtracted = (extractedText: string, imageSessionId: string) => {
-    // Switch to text mode to show the pipeline
+  // When image/pdf analysis completes — switch to text mode and start pipeline
+  const handleExternalTextReady = (extractedText: string, _sessionId: string) => {
     setInputMode("text");
-    // Start streaming on the pre-created session by connecting SSE directly
-    // We use startResearch with the extracted text so the UI updates too
     startResearch(extractedText, "standard");
   };
 
@@ -120,38 +125,38 @@ function DashboardContent() {
 
       {/* Main split grid */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel — query input + agent timeline */}
+        {/* Left panel */}
         <div className="w-full md:w-[420px] xl:w-[460px] flex-shrink-0 flex flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-secondary)]/50 overflow-hidden">
 
-          {/* Input Mode Toggle */}
-          <div className="px-4 pt-4 pb-2 border-b border-[var(--border-subtle)] flex-shrink-0">
+          {/* Input Mode Toggle — 3 tabs */}
+          <div className="px-4 pt-4 pb-3 border-b border-[var(--border-subtle)] flex-shrink-0">
             <div className="flex items-center gap-1 p-1 bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] mb-3">
-              <button
-                onClick={() => setInputMode("text")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 ${
-                  inputMode === "text"
-                    ? "bg-[var(--accent-pink)] text-white shadow-sm"
-                    : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
-                }`}
-              >
-                <TextCursorInput className="w-3.5 h-3.5" />
-                Text Query
-              </button>
-              <button
-                onClick={() => setInputMode("image")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 ${
-                  inputMode === "image"
-                    ? "bg-[var(--accent-pink)] text-white shadow-sm"
-                    : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
-                }`}
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                Image Upload
-              </button>
+              {INPUT_TABS.map(({ id, label: tabLabel, Icon: TabIcon, accent }) => (
+                <button
+                  key={id}
+                  onClick={() => setInputMode(id)}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 ${
+                    inputMode === id
+                      ? `${accent} text-white shadow-sm`
+                      : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
+                  }`}
+                >
+                  <TabIcon className="w-3.5 h-3.5" />
+                  {tabLabel}
+                </button>
+              ))}
             </div>
 
+            {/* Mode indicator label */}
+            <p className="text-xs text-[var(--text-muted)] mb-3 text-center">
+              {inputMode === "text" && "Enter a query or claim to fact-check"}
+              {inputMode === "image" && "Upload an image (WhatsApp forward, screenshot, meme)"}
+              {inputMode === "pdf"  && "Upload a PDF document to extract and verify claims"}
+            </p>
+
+            {/* Animated panel swap */}
             <AnimatePresence mode="wait">
-              {inputMode === "text" ? (
+              {inputMode === "text" && (
                 <motion.div
                   key="text"
                   initial={{ opacity: 0, x: -8 }}
@@ -165,7 +170,8 @@ function DashboardContent() {
                     onReset={reset}
                   />
                 </motion.div>
-              ) : (
+              )}
+              {inputMode === "image" && (
                 <motion.div
                   key="image"
                   initial={{ opacity: 0, x: 8 }}
@@ -173,12 +179,24 @@ function DashboardContent() {
                   exit={{ opacity: 0, x: -8 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <ImageUpload onTextExtracted={handleImageTextExtracted} />
+                  <ImageUpload onTextExtracted={handleExternalTextReady} />
+                </motion.div>
+              )}
+              {inputMode === "pdf" && (
+                <motion.div
+                  key="pdf"
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <PdfUpload onReady={handleExternalTextReady} />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
+          {/* Agent timeline */}
           <div
             ref={timelineRef}
             className="flex-1 overflow-y-auto p-4 scroll-smooth"
@@ -193,7 +211,6 @@ function DashboardContent() {
                 </span>
               )}
             </div>
-
             <AgentTimeline events={events} status={status} />
           </div>
         </div>
@@ -234,7 +251,13 @@ function DashboardContent() {
 
 export default function ResearchPage() {
   return (
-    <Suspense fallback={<div className="h-screen bg-[var(--bg-primary)] flex items-center justify-center text-[var(--text-muted)] text-xs">Loading Live Research Dashboard...</div>}>
+    <Suspense
+      fallback={
+        <div className="h-screen bg-[var(--bg-primary)] flex items-center justify-center text-[var(--text-muted)] text-xs">
+          Loading Live Research Dashboard...
+        </div>
+      }
+    >
       <DashboardContent />
     </Suspense>
   );

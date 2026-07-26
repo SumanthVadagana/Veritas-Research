@@ -17,14 +17,7 @@ import {
   Globe,
   Sparkles,
 } from "lucide-react";
-import { MarkdownRenderer } from "./MarkdownRenderer";
-import { SourceCard } from "./SourceCard";
-import type {
-  Citation,
-  FactCheck,
-  ResearchStatus,
-  SourceUsed,
-} from "@/hooks/useResearchStream";
+import { ClaimHighlighter } from "./ClaimHighlighter";
 
 interface SynthesisPanelProps {
   synthesis: string | null;
@@ -37,7 +30,8 @@ interface SynthesisPanelProps {
   status: ResearchStatus;
 }
 
-type Tab = "answer" | "report" | "sources";
+type Tab = "answer" | "highlighted" | "report" | "sources";
+
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Confidence bar: green ≥75%, yellow 40–74%, red <40%
@@ -374,9 +368,10 @@ export function SynthesisPanel({
   const [tab, setTab] = useState<Tab>("answer");
 
   const TABS: { id: Tab; label: string; Icon: React.ElementType; count?: number }[] = [
-    { id: "answer",  label: "Results",     Icon: Target,    count: factChecks.length },
-    { id: "report",  label: "Full Report", Icon: FileText                             },
-    { id: "sources", label: "Sources",     Icon: Link2,     count: citations.length   },
+    { id: "answer",      label: "Results",      Icon: Target,    count: factChecks.length },
+    { id: "highlighted", label: "Highlighted",  Icon: Sparkles                            },
+    { id: "report",      label: "Full Report",  Icon: FileText                            },
+    { id: "sources",     label: "Sources",      Icon: Link2,     count: citations.length   },
   ];
 
   /* ── Empty / idle state ── */
@@ -492,6 +487,17 @@ export function SynthesisPanel({
                   No claims were extracted yet.
                 </p>
               )}
+            </motion.div>
+          {/* HIGHLIGHTED CLAIMS TAB */}
+          {tab === "highlighted" && (
+            <motion.div
+              key="highlighted"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+            >
+              <ClaimHighlighter synthesis={synthesis} factChecks={factChecks} />
             </motion.div>
           )}
 

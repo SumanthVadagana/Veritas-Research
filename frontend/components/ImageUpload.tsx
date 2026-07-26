@@ -38,38 +38,119 @@ interface ImageUploadProps {
   onTextExtracted: (text: string, sessionId: string) => void;
 }
 
-function RealnessBadge({ score, label }: { score: number; label: string }) {
-  const color =
-    score >= 75
-      ? { bg: "bg-emerald-500/15", text: "text-emerald-500", border: "border-emerald-500/30", bar: "#10b981" }
-      : score >= 50
-      ? { bg: "bg-amber-500/15", text: "text-amber-500", border: "border-amber-500/30", bar: "#f59e0b" }
-      : { bg: "bg-rose-500/15", text: "text-rose-500", border: "border-rose-500/30", bar: "#f43f5e" };
+function RealnessBadge({ score, label, signals, aiIndicators }: {
+  score: number;
+  label: string;
+  signals: string[];
+  aiIndicators: string[];
+}) {
+  const isReal   = score >= 75;
+  const isMid    = score >= 40 && score < 75;
+  const isFake   = score < 40;
 
-  const Icon = score >= 75 ? CheckCircle2 : score >= 50 ? AlertTriangle : XCircle;
+  const palette = isReal
+    ? { stroke: "#10b981", bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-400", ring: "rgba(16,185,129,0.15)" }
+    : isMid
+    ? { stroke: "#f59e0b", bg: "bg-amber-500/10",   border: "border-amber-500/30",   text: "text-amber-400",   ring: "rgba(245,158,11,0.15)" }
+    : { stroke: "#f43f5e", bg: "bg-rose-500/10",    border: "border-rose-500/30",    text: "text-rose-400",    ring: "rgba(244,63,94,0.15)"  };
+
+  /* SVG ring params */
+  const R   = 38;
+  const cx  = 50;
+  const cy  = 50;
+  const circ = 2 * Math.PI * R;
+  const offset = circ * (1 - score / 100);
+
+  const summaryText = isReal
+    ? "This image appears genuine and unmanipulated."
+    : isMid
+    ? "Some manipulation signals were detected. Verify carefully."
+    : "This image is likely AI-generated or heavily manipulated.";
+
+  const allSignals = [...signals, ...aiIndicators];
 
   return (
-    <div className={`flex flex-col gap-2 p-3 rounded-xl border ${color.bg} ${color.border}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Icon className={`w-4 h-4 ${color.text}`} />
-          <span className={`text-sm font-extrabold ${color.text}`}>{label}</span>
+    <div className={`rounded-2xl border ${palette.border} ${palette.bg} overflow-hidden`}>
+      {/* Hero row */}
+      <div className="flex items-center gap-5 p-4">
+        {/* Circular gauge */}
+        <div className="relative flex-shrink-0">
+          <svg width="100" height="100" viewBox="0 0 100 100" className="-rotate-90">
+            {/* Track */}
+            <circle cx={cx} cy={cy} r={R} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+            {/* Glow halo */}
+            <circle cx={cx} cy={cy} r={R} fill="none" stroke={palette.ring} strokeWidth="12" />
+            {/* Progress */}
+            <motion.circle
+              cx={cx}
+              cy={cy}
+              r={R}
+              fill="none"
+              stroke={palette.stroke}
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeDasharray={circ}
+              initial={{ strokeDashoffset: circ }}
+              animate={{ strokeDashoffset: offset }}
+              transition={{ duration: 1.1, ease: "easeOut" }}
+            />
+          </svg>
+          {/* Score text overlay */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <motion.span
+              className={`text-2xl font-extrabold leading-none ${palette.text}`}
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
+            >
+              {score}
+            </motion.span>
+            <span className={`text-[10px] font-bold ${palette.text} opacity-70`}>/ 100</span>
+          </div>
         </div>
-        <span className={`text-lg font-extrabold ${color.text}`}>{score}%</span>
+
+        {/* Text info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">
+            Image Realness Score
+          </p>
+          <p className={`text-lg font-extrabold leading-tight ${palette.text}`}>{label}</p>
+          <p className="text-xs text-[var(--text-secondary)] mt-1.5 leading-relaxed">{summaryText}</p>
+        </div>
       </div>
-      {/* Progress bar */}
-      <div className="w-full h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-        <motion.div
-          className="h-full rounded-full"
-          style={{ backgroundColor: color.bar }}
-          initial={{ width: 0 }}
-          animate={{ width: `${score}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        />
+
+      {/* Score bar */}
+      <div className="px-4 pb-3">
+        <div className="w-full h-2 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+          <motion.div
+            className="h-full rounded-full"
+            style={{ backgroundColor: palette.stroke }}
+            initial={{ width: 0 }}
+            animate={{ width: `${score}%` }}
+            transition={{ duration: 1.1, ease: "easeOut" }}
+          />
+        </div>
+        <div className="flex justify-between text-[9px] font-bold text-[var(--text-muted)] mt-1">
+          <span>0 — AI-Generated</span>
+          <span>100 — Fully Real</span>
+        </div>
       </div>
-      <p className="text-xs text-[var(--text-muted)]">
-        Image Realness Score — {score >= 75 ? "Appears genuine" : score >= 50 ? "Some concerns detected" : "Likely AI-generated or manipulated"}
-      </p>
+
+      {/* Signals */}
+      {allSignals.length > 0 && (
+        <div className="border-t border-[var(--border-subtle)] px-4 py-3">
+          <p className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            ⚠ Detected Signals ({allSignals.length})
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {allSignals.slice(0, 6).map((s, i) => (
+              <span key={i} className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${palette.bg} ${palette.text} border ${palette.border}`}>
+                {s}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -278,7 +359,12 @@ export function ImageUpload({ onTextExtracted }: ImageUploadProps) {
                 className="flex flex-col gap-3"
               >
                 {/* Realness Score */}
-                <RealnessBadge score={result.realness_score} label={result.realness_label} />
+                <RealnessBadge
+                  score={result.realness_score}
+                  label={result.realness_label}
+                  signals={result.manipulation_signals}
+                  aiIndicators={result.ai_generation_indicators}
+                />
 
                 {/* Image Description */}
                 {result.image_description && (

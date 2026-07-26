@@ -12,8 +12,9 @@ import {
   AlertCircle,
   Cpu,
   Sparkles,
-  ImageIcon,
+  Upload,
   TextCursorInput,
+  ImageIcon,
   FileText,
 } from "lucide-react";
 import { useResearchStream } from "@/hooks/useResearchStream";
@@ -31,13 +32,7 @@ const STATUS_CFG = {
   failed: { label: "Failed", Icon: AlertCircle, color: "text-rose-500" },
 } as const;
 
-type InputMode = "text" | "image" | "pdf";
-
-const INPUT_TABS: { id: InputMode; label: string; Icon: React.ElementType; accent: string }[] = [
-  { id: "text",  label: "Text",  Icon: TextCursorInput, accent: "bg-[var(--accent-pink)]" },
-  { id: "image", label: "Image", Icon: ImageIcon,       accent: "bg-purple-500" },
-  { id: "pdf",   label: "PDF",   Icon: FileText,        accent: "bg-blue-500" },
-];
+type InputMode = "text" | "upload";
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -65,7 +60,6 @@ function DashboardContent() {
 
   const timelineRef = useRef<HTMLDivElement>(null);
 
-  // Auto-start if topic is passed in query string
   useEffect(() => {
     if (initialTopic && !autoStarted.current) {
       autoStarted.current = true;
@@ -73,15 +67,14 @@ function DashboardContent() {
     }
   }, [initialTopic, initialDepth, startResearch]);
 
-  // Auto-scroll timeline to bottom on new events
   useEffect(() => {
     const el = timelineRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [events]);
 
-  // When image/pdf analysis completes — switch to text mode and start pipeline
-  const handleExternalTextReady = (extractedText: string, _sessionId: string) => {
+  // Called when image/pdf analysis is done — switch to text mode, run pipeline
+  const handleUploadReady = (extractedText: string, _sessionId: string) => {
     setInputMode("text");
     startResearch(extractedText, "standard");
   };
@@ -92,7 +85,7 @@ function DashboardContent() {
     <div className="h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col overflow-hidden transition-colors duration-300">
       <Navbar />
 
-      {/* Progress & Session Status bar */}
+      {/* Status bar */}
       <div className="flex items-center justify-between px-5 py-2 border-b border-[var(--border-subtle)] bg-[var(--bg-secondary)] text-xs flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className={`flex items-center gap-1.5 font-semibold ${color}`}>
@@ -107,7 +100,6 @@ function DashboardContent() {
             )}
             <span>{label}</span>
           </div>
-
           {progressMessage && status === "running" && (
             <div className="flex items-center gap-1.5 text-[var(--accent-sky)] font-medium">
               <Sparkles className="w-3.5 h-3.5 animate-spin" />
@@ -115,7 +107,6 @@ function DashboardContent() {
             </div>
           )}
         </div>
-
         {sessionId && (
           <span className="text-[11px] text-[var(--text-muted)] font-mono bg-[var(--bg-card)] border border-[var(--border-subtle)] px-2.5 py-0.5 rounded-lg">
             Session: {sessionId.slice(0, 8)}
@@ -123,45 +114,46 @@ function DashboardContent() {
         )}
       </div>
 
-      {/* Main split grid */}
+      {/* Main layout */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Left panel */}
+
+        {/* ── LEFT PANEL ── */}
         <div className="w-full md:w-[420px] xl:w-[460px] flex-shrink-0 flex flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-secondary)]/50 overflow-hidden">
 
-          {/* Input Mode Toggle — 3 tabs */}
+          {/* Mode toggle: Text | Upload */}
           <div className="px-4 pt-4 pb-3 border-b border-[var(--border-subtle)] flex-shrink-0">
             <div className="flex items-center gap-1 p-1 bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] mb-3">
-              {INPUT_TABS.map(({ id, label: tabLabel, Icon: TabIcon, accent }) => (
-                <button
-                  key={id}
-                  onClick={() => setInputMode(id)}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 ${
-                    inputMode === id
-                      ? `${accent} text-white shadow-sm`
-                      : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
-                  }`}
-                >
-                  <TabIcon className="w-3.5 h-3.5" />
-                  {tabLabel}
-                </button>
-              ))}
+              <button
+                onClick={() => setInputMode("text")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-extrabold transition-all duration-200 ${
+                  inputMode === "text"
+                    ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                    : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
+                }`}
+              >
+                <TextCursorInput className="w-3.5 h-3.5" />
+                Text Query
+              </button>
+              <button
+                onClick={() => setInputMode("upload")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-extrabold transition-all duration-200 ${
+                  inputMode === "upload"
+                    ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                    : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
+                }`}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Upload File
+              </button>
             </div>
 
-            {/* Mode indicator label */}
-            <p className="text-xs text-[var(--text-muted)] mb-3 text-center">
-              {inputMode === "text" && "Enter a query or claim to fact-check"}
-              {inputMode === "image" && "Upload an image (WhatsApp forward, screenshot, meme)"}
-              {inputMode === "pdf"  && "Upload a PDF document to extract and verify claims"}
-            </p>
-
-            {/* Animated panel swap */}
             <AnimatePresence mode="wait">
-              {inputMode === "text" && (
+              {inputMode === "text" ? (
                 <motion.div
                   key="text"
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 8 }}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
                 >
                   <QueryInput
@@ -170,37 +162,23 @@ function DashboardContent() {
                     onReset={reset}
                   />
                 </motion.div>
-              )}
-              {inputMode === "image" && (
+              ) : (
                 <motion.div
-                  key="image"
-                  initial={{ opacity: 0, x: 8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -8 }}
+                  key="upload"
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.15 }}
                 >
-                  <ImageUpload onTextExtracted={handleExternalTextReady} />
-                </motion.div>
-              )}
-              {inputMode === "pdf" && (
-                <motion.div
-                  key="pdf"
-                  initial={{ opacity: 0, x: 8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -8 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <PdfUpload onReady={handleExternalTextReady} />
+                  {/* ── Unified Upload Panel — Image + PDF side by side ── */}
+                  <UploadPanel onReady={handleUploadReady} />
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
 
           {/* Agent timeline */}
-          <div
-            ref={timelineRef}
-            className="flex-1 overflow-y-auto p-4 scroll-smooth"
-          >
+          <div ref={timelineRef} className="flex-1 overflow-y-auto p-4 scroll-smooth">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
                 Live Agent Activity
@@ -215,7 +193,7 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Right panel — Synthesis + Claims + Sources */}
+        {/* ── RIGHT PANEL ── */}
         <div className="flex-1 flex flex-col overflow-hidden bg-[var(--bg-primary)]">
           <AnimatePresence>
             {error && (
@@ -249,12 +227,83 @@ function DashboardContent() {
   );
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   UploadPanel — Image and PDF on the same screen
+───────────────────────────────────────────────────────────────────────────── */
+type UploadType = "image" | "pdf";
+
+function UploadPanel({ onReady }: { onReady: (text: string, sessionId: string) => void }) {
+  const [activeUpload, setActiveUpload] = useState<UploadType>("image");
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Sub-toggle: Image | PDF */}
+      <div className="flex items-center gap-1 p-0.5 bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-subtle)]">
+        <button
+          onClick={() => setActiveUpload("image")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-bold transition-all duration-200 ${
+            activeUpload === "image"
+              ? "bg-purple-500/20 text-purple-400 border border-purple-500/30"
+              : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+          }`}
+        >
+          <ImageIcon className="w-3.5 h-3.5" />
+          Image
+        </button>
+        <button
+          onClick={() => setActiveUpload("pdf")}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-bold transition-all duration-200 ${
+            activeUpload === "pdf"
+              ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+              : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+          }`}
+        >
+          <FileText className="w-3.5 h-3.5" />
+          PDF
+        </button>
+      </div>
+
+      {/* Description */}
+      <p className="text-[11px] text-[var(--text-muted)] text-center">
+        {activeUpload === "image"
+          ? "Screenshot, WhatsApp forward, meme, news image"
+          : "News article, research paper, report, document"}
+      </p>
+
+      {/* The actual uploader */}
+      <AnimatePresence mode="wait">
+        {activeUpload === "image" ? (
+          <motion.div
+            key="image-up"
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 6 }}
+            transition={{ duration: 0.15 }}
+          >
+            <ImageUpload onTextExtracted={onReady} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="pdf-up"
+            initial={{ opacity: 0, x: 6 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -6 }}
+            transition={{ duration: 0.15 }}
+          >
+            <PdfUpload onReady={onReady} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function ResearchPage() {
   return (
     <Suspense
       fallback={
         <div className="h-screen bg-[var(--bg-primary)] flex items-center justify-center text-[var(--text-muted)] text-xs">
-          Loading Live Research Dashboard...
+          Loading Live Research Dashboard…
         </div>
       }
     >

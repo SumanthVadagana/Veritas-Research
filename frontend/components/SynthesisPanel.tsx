@@ -547,6 +547,8 @@ export function SynthesisPanel({
                 </p>
               )}
             </motion.div>
+          )}
+
           {/* HIGHLIGHTED CLAIMS TAB */}
           {tab === "highlighted" && (
             <motion.div

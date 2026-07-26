@@ -13,7 +13,7 @@ You MUST return ONLY a valid JSON object matching the EXACT schema below. No ext
 
 Schema:
 {
-  "verified_answer": "A direct, clear 1-3 sentence answer to the user's question. State what is TRUE/FALSE/UNVERIFIED. Be specific and definitive where evidence supports it.",
+  "verified_answer": "A direct, clear 1-3 sentence answer to the user's question. For comparison/evaluation queries (e.g., 'Which language is best for DSA? Is it Python?'), state the definitive verdict clearly (e.g., 'No, C++ and Java are generally considered better for learning DSA than Python due to faster execution speed, manual memory management, and rich STL containers, although Python is easier for beginners.'). State what is TRUE/FALSE/RECOMMENDED. Be explicit, direct, and definitive.",
   "explanation": "A 2-4 paragraph explanation providing full context: what the evidence shows, why the answer is supported, what nuances or caveats exist, and what remains uncertain.",
   "executive_summary": "Concise 150-200 word executive summary paragraph.",
   "synthesis_markdown": "Full citation-backed markdown report with ## headers and inline [1], [2] citations. Include: ## Overview, ## Key Evidence, ## Disputed Claims, ## Conclusion, ## Key Takeaways.",
@@ -26,7 +26,7 @@ Schema:
       "claim": "Exact statement of claim",
       "verdict": "verified",
       "confidence_score": 0.90,
-      "explanation": "Brief one-sentence reason for this verdict."
+      "explanation": "Brief 1-2 sentence reason and answer for this verdict."
     }
   ]
 }
@@ -35,11 +35,12 @@ VERDICT VALUES: "verified" | "disputed" | "unverified"
 CONFIDENCE: float between 0.0 and 1.0
 
 REPORT RULES:
-1. verified_answer must be honest — if claims are disputed, say so clearly.
+1. verified_answer MUST directly and explicitly answer the user's core question. Do NOT just rephrase the question. Give the direct verdict/answer first!
 2. Inline citations like [1], [2] must match the sources_used index numbers.
 3. Discuss contradictions and methodological gaps.
 4. Key Takeaways: 4-5 crisp bullet points.
 5. Target synthesis_markdown: 500-800 words."""
+
 
 
 class SynthesizerAgent(BaseAgent):
@@ -130,17 +131,24 @@ class SynthesizerAgent(BaseAgent):
         return self._fallback_report(topic, claims, sources)
 
     def _derive_answer(self, topic: str, claims: List[Dict[str, Any]]) -> str:
-        """Derive a short verified answer from claims."""
+        """Derive a short, direct verified answer from claims and explanations."""
         if not claims:
-            return f"Insufficient evidence was found to definitively answer the query: '{topic}'."
+            return f"Insufficient evidence was found to definitively answer: '{topic}'."
         verified = [c for c in claims if c.get("verdict") == "verified"]
         disputed = [c for c in claims if c.get("verdict") == "disputed"]
         if verified:
             top = verified[0]
-            return f"{top.get('claim', '')} (Confidence: {int(float(top.get('confidence_score', 0.7)) * 100)}%)"
+            explanation = top.get("explanation", "").strip()
+            claim_text = top.get("claim", "").strip()
+            if explanation and len(explanation) > 15 and not explanation.endswith("?"):
+                return f"{explanation}"
+            return f"Based on verified research: {claim_text}"
         elif disputed:
-            return f"The information about '{topic}' is disputed. {disputed[0].get('explanation', '')}"
+            top_d = disputed[0]
+            exp = top_d.get("explanation", "").strip()
+            return f"The information regarding '{topic}' is disputed. {exp}"
         return f"The query '{topic}' could not be conclusively verified from available sources."
+
 
     def _calc_overall_confidence(self, claims: List[Dict[str, Any]]) -> float:
         """Calculate weighted average confidence score from claims."""

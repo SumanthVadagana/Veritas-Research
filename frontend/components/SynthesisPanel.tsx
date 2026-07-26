@@ -167,19 +167,20 @@ function ClaimCard({
         </div>
 
         {/* ── Verified Answer ── */}
-        <div className="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)]">
-          <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-2 flex items-center gap-1.5">
-            <Sparkles className="w-3 h-3" />
-            Verified Answer
+        <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-sm">
+          <p className="text-[10px] font-bold text-[var(--accent-pink)] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--accent-pink)]" />
+            Verified Answer & Verdict
           </p>
-          <p className="text-sm font-bold text-[var(--text-primary)] leading-relaxed">
+          <p className="text-sm font-extrabold text-[var(--text-primary)] leading-relaxed">
             {fc.verdict === "verified"
-              ? "✅ " + (fc.explanation?.split(".")[0] || fc.claim)
+              ? "✅ " + (fc.explanation || `Evidence confirms: ${fc.claim}`)
               : fc.verdict === "disputed"
-              ? "⚠️ This claim is disputed. " + (fc.explanation?.split(".")[0] || "Conflicting evidence found.")
-              : "❓ Could not be conclusively verified. " + (fc.explanation?.split(".")[0] || "")}
+              ? "⚠️ Disputed / Nuanced: " + (fc.explanation || "Conflicting evidence found across sources.")
+              : "❓ Unverified: " + (fc.explanation || "Insufficient authoritative evidence found.")}
           </p>
         </div>
+
 
         {/* ── Confidence Score ── */}
         <ConfidenceBar score={score} size="md" />

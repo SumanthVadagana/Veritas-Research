@@ -28,6 +28,13 @@ export type Citation = {
   credibility_score?: number;
 };
 
+export type SourceUsed = {
+  index: number;
+  url: string;
+  title: string;
+  credibility: number;
+};
+
 export type ResearchStatus = "idle" | "running" | "completed" | "failed";
 
 export interface ResearchState {
@@ -35,9 +42,12 @@ export interface ResearchState {
   status: ResearchStatus;
   events: AgentEvent[];
   synthesis: string | null;
+  verifiedAnswer: string | null;
+  explanation: string | null;
   confidence: number | null;
   citations: Citation[];
   factChecks: FactCheck[];
+  sourcesUsed: SourceUsed[];
   error: string | null;
   progressMessage?: string;
 }
@@ -53,9 +63,12 @@ export function useResearchStream() {
     status: "idle",
     events: [],
     synthesis: null,
+    verifiedAnswer: null,
+    explanation: null,
     confidence: null,
     citations: [],
     factChecks: [],
+    sourcesUsed: [],
     error: null,
     progressMessage: undefined,
   });
@@ -73,15 +86,18 @@ export function useResearchStream() {
         status: "running",
         events: [],
         synthesis: null,
+        verifiedAnswer: null,
+        explanation: null,
         confidence: null,
         citations: [],
         factChecks: [],
+        sourcesUsed: [],
         error: null,
         progressMessage: "Initializing multi-agent pipeline...",
       });
 
       try {
-        // 1. Create session with explicit application/json accept
+        // 1. Create session
         const res = await fetch(`${API_URL}/api/research`, {
           method: "POST",
           headers: {
@@ -151,10 +167,17 @@ export function useResearchStream() {
             } else if (type === "final_report" || type === "synthesis") {
               const synth = (payload.synthesis || payload.synthesis_markdown) as string;
               const conf = (payload.overall_confidence || payload.confidence) as number;
+              const verifiedAnswer = (payload.verified_answer as string) || null;
+              const explanation = (payload.explanation as string) || null;
+              const rawSourcesUsed = (payload.sources_used as SourceUsed[]) || [];
+
               setState((prev) => ({
                 ...prev,
                 synthesis: synth,
                 confidence: conf,
+                verifiedAnswer,
+                explanation,
+                sourcesUsed: rawSourcesUsed,
               }));
             } else if (type === "complete") {
               setState((prev) => ({
@@ -204,9 +227,12 @@ export function useResearchStream() {
       status: "idle",
       events: [],
       synthesis: null,
+      verifiedAnswer: null,
+      explanation: null,
       confidence: null,
       citations: [],
       factChecks: [],
+      sourcesUsed: [],
       error: null,
       progressMessage: undefined,
     });

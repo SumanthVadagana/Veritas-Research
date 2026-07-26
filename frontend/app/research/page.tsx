@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -12,12 +12,15 @@ import {
   AlertCircle,
   Cpu,
   Sparkles,
+  ImageIcon,
+  TextCursorInput,
 } from "lucide-react";
 import { useResearchStream } from "@/hooks/useResearchStream";
 import { QueryInput } from "@/components/QueryInput";
 import { AgentTimeline } from "@/components/AgentTimeline";
 import { SynthesisPanel } from "@/components/SynthesisPanel";
 import { Navbar } from "@/components/Navbar";
+import { ImageUpload } from "@/components/ImageUpload";
 
 const STATUS_CFG = {
   idle: { label: "Ready", Icon: Shield, color: "text-[var(--text-muted)]" },
@@ -26,11 +29,14 @@ const STATUS_CFG = {
   failed: { label: "Failed", Icon: AlertCircle, color: "text-rose-500" },
 } as const;
 
+type InputMode = "text" | "image";
+
 function DashboardContent() {
   const searchParams = useSearchParams();
   const initialTopic = searchParams.get("topic");
   const initialDepth = searchParams.get("depth") || "standard";
   const autoStarted = useRef(false);
+  const [inputMode, setInputMode] = useState<InputMode>("text");
 
   const {
     status,
@@ -39,6 +45,9 @@ function DashboardContent() {
     confidence,
     citations,
     factChecks,
+    sourcesUsed,
+    verifiedAnswer,
+    explanation,
     error,
     sessionId,
     progressMessage,
@@ -62,6 +71,15 @@ function DashboardContent() {
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [events]);
+
+  // When image analysis completes and has a session_id, connect to SSE stream
+  const handleImageTextExtracted = (extractedText: string, imageSessionId: string) => {
+    // Switch to text mode to show the pipeline
+    setInputMode("text");
+    // Start streaming on the pre-created session by connecting SSE directly
+    // We use startResearch with the extracted text so the UI updates too
+    startResearch(extractedText, "standard");
+  };
 
   const { label, Icon, color } = STATUS_CFG[status] ?? STATUS_CFG.idle;
 
@@ -103,13 +121,62 @@ function DashboardContent() {
       {/* Main split grid */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left panel — query input + agent timeline */}
-        <div className="w-full md:w-[400px] xl:w-[440px] flex-shrink-0 flex flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-secondary)]/50 overflow-hidden">
-          <div className="p-4 border-b border-[var(--border-subtle)] flex-shrink-0">
-            <QueryInput
-              onSubmit={startResearch}
-              isLoading={status === "running"}
-              onReset={reset}
-            />
+        <div className="w-full md:w-[420px] xl:w-[460px] flex-shrink-0 flex flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-secondary)]/50 overflow-hidden">
+
+          {/* Input Mode Toggle */}
+          <div className="px-4 pt-4 pb-2 border-b border-[var(--border-subtle)] flex-shrink-0">
+            <div className="flex items-center gap-1 p-1 bg-[var(--bg-card)] rounded-xl border border-[var(--border-subtle)] mb-3">
+              <button
+                onClick={() => setInputMode("text")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 ${
+                  inputMode === "text"
+                    ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                    : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
+                }`}
+              >
+                <TextCursorInput className="w-3.5 h-3.5" />
+                Text Query
+              </button>
+              <button
+                onClick={() => setInputMode("image")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-extrabold transition-all duration-200 ${
+                  inputMode === "image"
+                    ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                    : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                Image Upload
+              </button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              {inputMode === "text" ? (
+                <motion.div
+                  key="text"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <QueryInput
+                    onSubmit={startResearch}
+                    isLoading={status === "running"}
+                    onReset={reset}
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="image"
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.15 }}
+                >
+                  <ImageUpload onTextExtracted={handleImageTextExtracted} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div
@@ -153,6 +220,9 @@ function DashboardContent() {
               confidence={confidence}
               citations={citations}
               factChecks={factChecks}
+              sourcesUsed={sourcesUsed}
+              verifiedAnswer={verifiedAnswer}
+              explanation={explanation}
               status={status}
             />
           </div>

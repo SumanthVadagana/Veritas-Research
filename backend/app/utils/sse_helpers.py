@@ -61,6 +61,9 @@ def sse_final_report(
     executive_summary: Optional[str],
     overall_confidence: float,
     claims: List[Dict[str, Any]],
+    verified_answer: Optional[str] = None,
+    explanation: Optional[str] = None,
+    sources_used: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     """Stream Synthesizer Agent final report event."""
     return format_sse_event(
@@ -70,6 +73,9 @@ def sse_final_report(
             "executive_summary": executive_summary,
             "overall_confidence": overall_confidence,
             "claims": claims,
+            "verified_answer": verified_answer or "",
+            "explanation": explanation or executive_summary or "",
+            "sources_used": sources_used or [],
         },
     )
 

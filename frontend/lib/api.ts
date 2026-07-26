@@ -125,3 +125,32 @@ export async function submitFeedback(body: {
   if (!res.ok) throw new Error(`Feedback submission failed: ${res.status}`);
   return res.json();
 }
+
+export interface ImageAnalysisResult {
+  session_id: string | null;
+  extracted_text: string;
+  has_text: boolean;
+  image_description: string;
+  realness_score: number;
+  realness_label: string;
+  manipulation_signals: string[];
+  ai_generation_indicators: string[];
+  metadata_notes: string;
+  content_warnings: string[];
+  fact_checkable: boolean;
+}
+
+export async function analyzeImage(file: File): Promise<ImageAnalysisResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${API_URL}/api/analyze-image`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ detail: "Analysis failed" }));
+    throw new Error(errData.detail || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+

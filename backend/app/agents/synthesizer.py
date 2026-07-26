@@ -6,32 +6,40 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-SYNTHESIZER_SYSTEM = """You are a Master Research Synthesis Director. Your mission is to author a comprehensive, authoritative, citation-backed final research report.
+SYNTHESIZER_SYSTEM = """You are a Master Research Synthesis Director and Fact-Verification Expert. Your mission is to deliver a comprehensive, authoritative, citation-backed final research report.
 
-REPORT ARCHITECTURE RULES:
-1. Executive Summary: Begin with a 150–200 word high-level synthesis overview.
-2. Structured Markdown: Use clear ## section headers, markdown formatting, tables, and bullet points.
-3. Inline Citations: Cite sources inline using exact bracketed numbers like [1], [2], [3] matching the source index provided.
-4. Objective Treatment of Disputes: Explicitly discuss disputed facts, contradictions, and methodological gaps identified by the Critic Agent.
-5. Key Takeaways: Conclude with a "## Key Takeaways" section (4-5 crisp bullet points).
-6. Target Word Count: 500–800 words total.
-
-STRICT OUTPUT FORMAT:
-You MUST return ONLY a valid JSON object matching the exact schema below.
+CRITICAL OUTPUT REQUIREMENTS:
+You MUST return ONLY a valid JSON object matching the EXACT schema below. No extra text, no markdown fences around the JSON.
 
 Schema:
 {
-  "executive_summary": "Concise executive summary paragraph.",
-  "synthesis_markdown": "Full citation-backed markdown report with ## headers and inline [1], [2] citations.",
+  "verified_answer": "A direct, clear 1-3 sentence answer to the user's question. State what is TRUE/FALSE/UNVERIFIED. Be specific and definitive where evidence supports it.",
+  "explanation": "A 2-4 paragraph explanation providing full context: what the evidence shows, why the answer is supported, what nuances or caveats exist, and what remains uncertain.",
+  "executive_summary": "Concise 150-200 word executive summary paragraph.",
+  "synthesis_markdown": "Full citation-backed markdown report with ## headers and inline [1], [2] citations. Include: ## Overview, ## Key Evidence, ## Disputed Claims, ## Conclusion, ## Key Takeaways.",
   "overall_confidence": 0.88,
+  "sources_used": [
+    {"index": 1, "url": "https://...", "title": "Source Title", "credibility": 0.9}
+  ],
   "claims_summary": [
     {
       "claim": "Exact statement of claim",
-      "verdict": "verified" | "disputed" | "unverified",
-      "confidence_score": 0.90
+      "verdict": "verified",
+      "confidence_score": 0.90,
+      "explanation": "Brief one-sentence reason for this verdict."
     }
   ]
-}"""
+}
+
+VERDICT VALUES: "verified" | "disputed" | "unverified"
+CONFIDENCE: float between 0.0 and 1.0
+
+REPORT RULES:
+1. verified_answer must be honest — if claims are disputed, say so clearly.
+2. Inline citations like [1], [2] must match the sources_used index numbers.
+3. Discuss contradictions and methodological gaps.
+4. Key Takeaways: 4-5 crisp bullet points.
+5. Target synthesis_markdown: 500-800 words."""
 
 
 class SynthesizerAgent(BaseAgent):
@@ -70,23 +78,39 @@ class SynthesizerAgent(BaseAgent):
         )
 
         user_prompt = (
-            f"Research Topic: {topic}\n\n"
+            f"Research Topic / Query: {topic}\n\n"
             f"Verified Claims & Verdicts:\n{claims_text}\n\n"
             f"Methodological Critique:\n{critique_text}\n\n"
             f"Available Sources for Inline Citation:\n{sources_text}\n\n"
-            "Compile the final, authoritative citation-backed report. Return PURE JSON ONLY."
+            "Compile the final, authoritative citation-backed report. "
+            "The verified_answer must directly answer the user's query. "
+            "Return PURE JSON ONLY."
         )
 
         try:
             res = await self.call_json(
                 system=SYNTHESIZER_SYSTEM,
                 user=user_prompt,
-                max_tokens=3500,
+                max_tokens=4000,
             )
 
             if isinstance(res, dict) and "synthesis_markdown" in res:
+                res.setdefault("verified_answer", self._derive_answer(topic, claims))
+                res.setdefault("explanation", res.get("executive_summary", f"Research on '{topic}' completed."))
                 res.setdefault("executive_summary", f"Executive summary on {topic}.")
                 res.setdefault("overall_confidence", self._calc_overall_confidence(claims))
+                res.setdefault(
+                    "sources_used",
+                    [
+                        {
+                            "index": i + 1,
+                            "url": s.get("url", ""),
+                            "title": s.get("title", "Source"),
+                            "credibility": s.get("credibility_score", 0.7),
+                        }
+                        for i, s in enumerate(sources[:10])
+                    ],
+                )
                 res.setdefault(
                     "claims_summary",
                     [
@@ -94,6 +118,7 @@ class SynthesizerAgent(BaseAgent):
                             "claim": c.get("claim", ""),
                             "verdict": c.get("verdict", "unverified"),
                             "confidence_score": c.get("confidence_score", 0.5),
+                            "explanation": c.get("explanation", ""),
                         }
                         for c in claims
                     ],
@@ -103,6 +128,19 @@ class SynthesizerAgent(BaseAgent):
             logger.error("SynthesizerAgent report generation failed: %s", exc)
 
         return self._fallback_report(topic, claims, sources)
+
+    def _derive_answer(self, topic: str, claims: List[Dict[str, Any]]) -> str:
+        """Derive a short verified answer from claims."""
+        if not claims:
+            return f"Insufficient evidence was found to definitively answer the query: '{topic}'."
+        verified = [c for c in claims if c.get("verdict") == "verified"]
+        disputed = [c for c in claims if c.get("verdict") == "disputed"]
+        if verified:
+            top = verified[0]
+            return f"{top.get('claim', '')} (Confidence: {int(float(top.get('confidence_score', 0.7)) * 100)}%)"
+        elif disputed:
+            return f"The information about '{topic}' is disputed. {disputed[0].get('explanation', '')}"
+        return f"The query '{topic}' could not be conclusively verified from available sources."
 
     def _calc_overall_confidence(self, claims: List[Dict[str, Any]]) -> float:
         """Calculate weighted average confidence score from claims."""
@@ -120,21 +158,34 @@ class SynthesizerAgent(BaseAgent):
     ) -> Dict[str, Any]:
         """Fallback synthesis report generation."""
         summary = f"This report synthesizes evidence gathered on '{topic}' across {len(sources)} sources."
-        markdown_body = f"## Executive Summary\n\n{summary}\n\n## Key Claims & Evidence\n\n"
+        answer = self._derive_answer(topic, claims)
+        markdown_body = f"## Overview\n\n{summary}\n\n## Key Claims & Evidence\n\n"
         for i, c in enumerate(claims, 1):
-            markdown_body += f"{i}. **{c.get('claim')}** — *Verdict: {c.get('verdict')}*\n"
+            markdown_body += f"{i}. **{c.get('claim')}** — *Verdict: {c.get('verdict')}*\n   {c.get('explanation', '')}\n\n"
 
         markdown_body += "\n## Key Takeaways\n\n- Research completed successfully.\n- Multiple web sources were evaluated.\n"
 
         return {
+            "verified_answer": answer,
+            "explanation": summary,
             "executive_summary": summary,
             "synthesis_markdown": markdown_body,
             "overall_confidence": self._calc_overall_confidence(claims),
+            "sources_used": [
+                {
+                    "index": i + 1,
+                    "url": s.get("url", ""),
+                    "title": s.get("title", "Source"),
+                    "credibility": s.get("credibility_score", 0.7),
+                }
+                for i, s in enumerate(sources[:10])
+            ],
             "claims_summary": [
                 {
                     "claim": c.get("claim", ""),
                     "verdict": c.get("verdict", "unverified"),
                     "confidence_score": c.get("confidence_score", 0.5),
+                    "explanation": c.get("explanation", ""),
                 }
                 for c in claims
             ],

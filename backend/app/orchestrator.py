@@ -301,6 +301,9 @@ async def run_research_pipeline(
             executive_summary=executive_summary,
             overall_confidence=overall_confidence,
             claims=claims_summary,
+            verified_answer=report_res.get("verified_answer", ""),
+            explanation=report_res.get("explanation", executive_summary),
+            sources_used=report_res.get("sources_used", []),
         )
         yield sse_synthesis(synthesis_markdown, overall_confidence)
         yield sse_complete(session_id)

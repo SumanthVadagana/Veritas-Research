@@ -25,32 +25,33 @@ ALLOWED_MIME_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "ima
 MAX_FILE_SIZE_MB = 10
 
 
-IMAGE_ANALYSIS_PROMPT = """You are an expert forensic image analyst and OCR specialist.
+IMAGE_ANALYSIS_PROMPT = """Analyze this image in detail and return ONLY a valid JSON object matching this schema.
 
-Analyze this image and return a JSON object with EXACTLY these fields:
+CRITICAL INSTRUCTIONS FOR REALNESS SCORE:
+1. Examine image for AI artifacts (unnatural skin textures, extra fingers, warped backgrounds, text distortion, glossy AI rendering style, lighting mismatches).
+2. Calculate a specific Realness Score between 0 and 100:
+   - 90-100: Real photograph with zero manipulation
+   - 75-89: Genuine photo, slight compression/filters
+   - 50-74: Subtle edit/crop/filter or inconclusive
+   - 25-49: Likely AI-generated (Midjourney, DALL-E, Stable Diffusion) or photo-manipulated
+   - 0-24: Obvious AI generation or heavy Photoshop composition
+3. DO NOT DEFAULT TO 50. Provide an exact calculated score based on visual evidence.
 
+Return ONLY this JSON object structure:
 {
-  "extracted_text": "All text visible in the image, extracted verbatim. Include all text from signs, captions, watermarks, messages, etc. If no text is found, return empty string.",
-  "image_description": "One paragraph describing what the image shows (people, objects, scene, context).",
-  "realness_score": 78,
-  "realness_label": "Likely Real",
-  "manipulation_signals": ["List of specific signals that suggest manipulation or AI generation, e.g. 'unnatural lighting', 'blurry edges around subjects', 'inconsistent shadows'. Empty list if none found."],
-  "ai_generation_indicators": ["Specific AI-generation artifacts if detected. Empty list if image appears genuine."],
-  "metadata_notes": "Any observations about image quality, compression artifacts, or authenticity markers.",
-  "content_warnings": ["Any concerning content types: 'misinformation', 'hate speech', 'adult content', etc. Empty list if clean."],
+  "extracted_text": "Text visible in image or empty string",
+  "image_description": "Clear 1-2 sentence description of image content",
+  "realness_score": 85,
+  "realness_label": "Genuine",
+  "manipulation_signals": ["signal 1", "signal 2"],
+  "ai_generation_indicators": ["indicator 1"],
+  "metadata_notes": "Compression & camera quality notes",
+  "content_warnings": [],
   "fact_checkable": true
 }
 
-REALNESS SCORE GUIDE:
-- 90-100: Almost certainly genuine photo
-- 70-89: Likely real, minor concerns
-- 50-69: Uncertain, some manipulation signals
-- 30-49: Likely manipulated or AI-generated
-- 0-29: Almost certainly AI-generated or heavily manipulated
+Valid realness_label options: "Genuine", "Likely Real", "Uncertain", "Likely Manipulated", "AI-Generated"."""
 
-REALNESS LABEL must be one of: "Genuine", "Likely Real", "Uncertain", "Likely Manipulated", "AI-Generated"
-
-Return ONLY the JSON object, no extra text."""
 
 
 async def analyze_image_with_gemini(image_bytes: bytes, mime_type: str) -> dict:

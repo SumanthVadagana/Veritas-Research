@@ -49,3 +49,71 @@ async def get_session(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
     return session
+
+
+@router.get("/sessions/{session_id}/pdf")
+async def download_session_pdf(
+    session_id: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate and return downloadable PDF report for a research session."""
+    from fastapi import Response
+    from app.utils.pdf_generator import generate_report_pdf
+
+    result = await db.execute(
+        select(ResearchSession)
+        .where(ResearchSession.id == session_id)
+        .options(
+            selectinload(ResearchSession.sources),
+            selectinload(ResearchSession.claims),
+            selectinload(ResearchSession.final_report),
+        )
+    )
+    session = result.scalar_one_or_none()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session_data = {
+        "id": session.id,
+        "query": session.query,
+        "created_at": session.created_at.strftime("%Y-%m-%d %H:%M UTC") if session.created_at else "",
+        "confidence_score": session.confidence_score,
+        "final_report": {
+            "synthesis": session.final_report.synthesis if session.final_report else "",
+            "confidence_score": session.final_report.confidence_score if session.final_report else session.confidence_score,
+        },
+        "claims": [
+            {
+                "claim_text": c.claim_text,
+                "verdict": c.verdict,
+                "confidence_score": c.confidence_score,
+                "explanation": c.explanation,
+            }
+            for c in (session.claims or [])
+        ],
+        "sources": [
+            {
+                "title": s.title,
+                "url": s.url,
+                "credibility_score": s.credibility_score,
+            }
+            for c in (session.claims or []) for s in []
+        ] or [
+            {
+                "title": s.title or s.url,
+                "url": s.url,
+                "credibility_score": s.credibility_score,
+            }
+            for s in (session.sources or [])
+        ],
+    }
+
+    pdf_bytes = generate_report_pdf(session_data)
+    filename = f"veritas_report_{session_id[:8]}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+

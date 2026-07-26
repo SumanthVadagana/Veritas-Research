@@ -16,6 +16,9 @@ import {
   Target,
   Globe,
   Sparkles,
+  Download,
+  Share2,
+  Check,
 } from "lucide-react";
 import { ClaimHighlighter } from "./ClaimHighlighter";
 
@@ -28,7 +31,9 @@ interface SynthesisPanelProps {
   verifiedAnswer?: string | null;
   explanation?: string | null;
   status: ResearchStatus;
+  sessionId?: string | null;
 }
+
 
 type Tab = "answer" | "highlighted" | "report" | "sources";
 
@@ -364,8 +369,27 @@ export function SynthesisPanel({
   verifiedAnswer = null,
   explanation = null,
   status,
+  sessionId = null,
 }: SynthesisPanelProps) {
   const [tab, setTab] = useState<Tab>("answer");
+  const [copied, setCopied] = useState(false);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+  const handleShare = () => {
+    if (typeof window !== "undefined" && sessionId) {
+      const shareUrl = `${window.location.origin}/report/${sessionId}`;
+      navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (sessionId) {
+      window.open(`${API_URL}/api/sessions/${sessionId}/pdf`, "_blank");
+    }
+  };
 
   const TABS: { id: Tab; label: string; Icon: React.ElementType; count?: number }[] = [
     { id: "answer",      label: "Results",      Icon: Target,    count: factChecks.length },
@@ -398,32 +422,67 @@ export function SynthesisPanel({
 
   return (
     <div className="flex flex-col h-full">
-      {/* ── Tab bar ── */}
-      <div className="flex items-center gap-1 mb-5 p-1 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-subtle)] flex-shrink-0">
-        {TABS.map(({ id, label, Icon, count }) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-extrabold transition-all duration-200 ${
-              tab === id
-                ? "bg-[var(--accent-pink)] text-white shadow-sm"
-                : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
-            }`}
-          >
-            <Icon className="w-3.5 h-3.5" />
-            {label}
-            {count != null && count > 0 && (
-              <span
-                className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  tab === id ? "bg-white/25 text-white" : "bg-[var(--bg-card)] text-[var(--text-primary)]"
-                }`}
-              >
-                {count}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* ── Top Bar: Tabs + Download/Share Actions ── */}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+        <div className="flex-1 flex items-center gap-1 p-1 bg-[var(--bg-secondary)] rounded-xl border border-[var(--border-subtle)] min-w-[280px]">
+          {TABS.map(({ id, label, Icon, count }) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-extrabold transition-all duration-200 ${
+                tab === id
+                  ? "bg-[var(--accent-pink)] text-white shadow-sm"
+                  : "text-[var(--text-primary)] hover:bg-[var(--bg-card-hover)]"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+              {count != null && count > 0 && (
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                    tab === id ? "bg-white/25 text-white" : "bg-[var(--bg-card)] text-[var(--text-primary)]"
+                  }`}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Share & Download PDF buttons for completed report */}
+        {sessionId && (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleDownloadPdf}
+              className="flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-extrabold text-white bg-gradient-to-r from-blue-500 to-[var(--accent-pink)] hover:opacity-90 transition-opacity shadow-sm"
+              title="Download full verification report as PDF"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">PDF</span>
+            </button>
+
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 py-2 px-3 rounded-xl text-xs font-extrabold text-[var(--text-primary)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-subtle)] transition-colors shadow-sm"
+              title="Copy shareable link"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-emerald-500">Copied</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-3.5 h-3.5 text-[var(--accent-pink)]" />
+                  <span className="hidden sm:inline">Share</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
+
 
       {/* ── Content ── */}
       <div className="flex-1 overflow-y-auto min-h-0 pr-0.5">

@@ -219,6 +219,7 @@ function DashboardContent() {
               verifiedAnswer={verifiedAnswer}
               explanation={explanation}
               status={status}
+              sessionId={sessionId}
             />
           </div>
         </div>

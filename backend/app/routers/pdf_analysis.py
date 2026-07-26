@@ -100,13 +100,10 @@ The research_query should be specific and searchable."""
 
 async def extract_claims_with_gemini(text: str, filename: str) -> dict:
     """Use Gemini to intelligently extract claims and create a research query from PDF text with multi-key failover."""
-    keys = []
-    if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "demo":
-        keys.append(settings.GEMINI_API_KEY)
-    if settings.GEMINI_API_KEY_2 and settings.GEMINI_API_KEY_2 != "demo":
-        keys.append(settings.GEMINI_API_KEY_2)
+    keys = settings.get_all_gemini_keys()
 
     if not keys:
+
         lines = [l.strip() for l in text.split("\n") if len(l.strip()) > 40][:5]
         return {
             "document_title": filename.replace(".pdf", "").replace("_", " ").title(),

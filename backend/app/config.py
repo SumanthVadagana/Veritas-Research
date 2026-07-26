@@ -8,11 +8,21 @@ class Settings(BaseSettings):
     # Database — SQLite for dev, PostgreSQL for prod
     DATABASE_URL: str = "sqlite+aiosqlite:///./veritas.db"
 
-    # Google Gemini — Active Gemini models & Key Failover
+    # Google Gemini — Active Gemini models & Key Failover (Keys 1, 2, 3)
     GEMINI_API_KEY: str = ""
     GEMINI_API_KEY_2: str = ""
+    GEMINI_API_KEY_3: str = ""
     GEMINI_FLASH_MODEL: str = "gemini-2.0-flash"
     GEMINI_PRO_MODEL: str = "gemini-2.0-flash"
+
+    def get_all_gemini_keys(self) -> list:
+        """Return list of configured non-empty Gemini API keys."""
+        keys = []
+        for k in [self.GEMINI_API_KEY, self.GEMINI_API_KEY_2, self.GEMINI_API_KEY_3]:
+            if k and k.strip() and k.strip() != "demo":
+                keys.append(k.strip())
+        return keys
+
 
 
     # Tavily

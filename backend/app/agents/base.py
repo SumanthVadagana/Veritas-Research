@@ -23,13 +23,9 @@ class BaseAgent:
         self.model = model or settings.GEMINI_FLASH_MODEL
 
     def _get_api_keys(self) -> list:
-        """Return list of non-empty configured Gemini API keys."""
-        keys = []
-        if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "demo":
-            keys.append(settings.GEMINI_API_KEY)
-        if settings.GEMINI_API_KEY_2 and settings.GEMINI_API_KEY_2 != "demo":
-            keys.append(settings.GEMINI_API_KEY_2)
-        return keys
+        """Return list of non-empty configured Gemini API keys (Key 1, Key 2, Key 3)."""
+        return settings.get_all_gemini_keys()
+
 
     async def call(
         self,

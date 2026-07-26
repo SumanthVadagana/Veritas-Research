@@ -134,13 +134,10 @@ def _parse_analysis_json(raw_text: str, image_bytes: bytes) -> Dict[str, Any]:
 
 async def analyze_image_with_gemini(image_bytes: bytes, mime_type: str) -> dict:
     """Use Gemini Vision to analyze image, extract text and compute realness score with multi-key failover."""
-    keys = []
-    if settings.GEMINI_API_KEY and settings.GEMINI_API_KEY != "demo":
-        keys.append(settings.GEMINI_API_KEY)
-    if settings.GEMINI_API_KEY_2 and settings.GEMINI_API_KEY_2 != "demo":
-        keys.append(settings.GEMINI_API_KEY_2)
+    keys = settings.get_all_gemini_keys()
 
     if not keys:
+
         score = _compute_fallback_score(image_bytes)
         return {
             "extracted_text": "Demo mode: Set GEMINI_API_KEY for full AI OCR.",

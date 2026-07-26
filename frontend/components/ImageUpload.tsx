@@ -151,6 +151,12 @@ function RealnessBadge({ score, label, signals, aiIndicators }: {
           </div>
         </div>
       )}
+
+      {/* Disclaimer note */}
+      <div className="border-t border-[var(--border-subtle)] px-4 py-2 bg-[var(--bg-secondary)]/50 text-[10px] text-[var(--text-muted)] italic flex items-center gap-1.5">
+        <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0" />
+        <span>Note: AI image detection is experimental and may contain errors. Always cross-verify visual media.</span>
+      </div>
     </div>
   );
 }

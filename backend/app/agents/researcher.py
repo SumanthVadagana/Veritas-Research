@@ -59,9 +59,9 @@ class ResearcherAgent(BaseAgent):
         super().__init__("Researcher")
 
     async def break_topic(self, topic: str, depth: str = "standard") -> List[str]:
-        """Break down a topic into focused search sub-queries."""
-        depth_map = {"quick": 2, "standard": 4, "deep": 6}
-        num_queries = depth_map.get(str(depth).lower(), 4)
+        """Break down a topic into focused search sub-queries with fast execution."""
+        depth_map = {"quick": 2, "standard": 3, "deep": 4}
+        num_queries = depth_map.get(str(depth).lower(), 3)
 
         user_prompt = (
             f"Research Topic: {topic}\n"
@@ -72,7 +72,7 @@ class ResearcherAgent(BaseAgent):
             res = await self.call_json(
                 system=PLANNING_SYSTEM,
                 user=user_prompt,
-                max_tokens=512,
+                max_tokens=256,
             )
             if isinstance(res, dict) and "sub_queries" in res:
                 queries = [str(q) for q in res["sub_queries"] if q]
@@ -82,10 +82,10 @@ class ResearcherAgent(BaseAgent):
             logger.warning("Researcher break_topic fallback due to: %s", exc)
 
         return [
-            f"{topic} key facts and scientific consensus",
-            f"{topic} latest evidence and developments",
-            f"{topic} challenges risks and controversies",
+            f"{topic} key facts and consensus",
+            f"{topic} latest evidence and analysis",
         ][:num_queries]
+
 
     async def run_parallel_searches(self, sub_queries: List[str]) -> List[Dict[str, Any]]:
         """Run parallel searches across sub-queries using Tavily."""
@@ -138,22 +138,26 @@ class ResearcherAgent(BaseAgent):
             res = await self.call_json(
                 system=EXTRACTION_SYSTEM,
                 user=user_prompt,
-                max_tokens=1524,
+                max_tokens=1000,
             )
             if isinstance(res, dict) and "claims" in res:
                 claims = res["claims"]
-                if isinstance(claims, list):
+                if isinstance(claims, list) and len(claims) > 0:
                     return claims
         except Exception as exc:
             logger.warning("Claim extraction fallback due to: %s", exc)
 
+        top_source = sources[0] if sources else {}
+        snippet_text = top_source.get("content", "")[:200] if top_source else ""
+
         return [
             {
-                "claim": f"Evidence and data concerning {topic} were analyzed across retrieved web sources.",
+                "claim": f"{topic}",
                 "supporting_source_indices": [1],
-                "context": "General findings gathered during research phase.",
+                "context": snippet_text or f"Evidence gathered from research on '{topic}'.",
             }
         ]
+
 
     async def execute(self, topic: str, depth: str = "standard") -> Dict[str, Any]:
         """Full execution pipeline for Researcher Agent."""

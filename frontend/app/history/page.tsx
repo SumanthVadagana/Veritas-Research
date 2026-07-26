@@ -139,26 +139,35 @@ export default async function HistoryPage() {
                     ? Math.round(s.confidence_score * 100)
                     : null;
 
+                const confBadgeColor =
+                  confPct !== null && confPct >= 75
+                    ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/25"
+                    : confPct !== null && confPct >= 40
+                    ? "bg-amber-500/10 text-amber-500 border-amber-500/25"
+                    : "bg-rose-500/10 text-rose-500 border-rose-500/25";
+
                 return (
-                  <Link key={s.id} href={`/research/${s.id}`}>
-                    <div className="flex items-center gap-3.5 p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] transition-all duration-200 group">
-                      <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
-                        <StatusIcon className={`w-4 h-4 ${statusColor}`} />
+                  <Link key={s.id} href={`/report/${s.id}`}>
+                    <div className="flex items-center gap-3.5 p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent-pink)]/40 transition-all duration-200 group shadow-sm">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
+                        <StatusIcon className={`w-5 h-5 ${statusColor}`} />
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-[var(--text-primary)] truncate">
+                        <p className="text-sm font-extrabold text-[var(--text-primary)] truncate group-hover:text-[var(--accent-pink)] transition-colors">
                           {s.query}
                         </p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className={`text-xs font-semibold capitalize ${statusColor}`}>
+                        <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
+                          <span className={`text-xs font-extrabold capitalize ${statusColor}`}>
                             {s.status}
                           </span>
+
                           {confPct !== null && (
-                            <span className="text-xs text-[var(--text-secondary)] font-mono">
-                              {confPct}% confidence
+                            <span className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${confBadgeColor}`}>
+                              {confPct}% Confidence
                             </span>
                           )}
+
                           <span className="text-xs text-[var(--text-muted)]">
                             {formatDistanceToNow(new Date(s.created_at), {
                               addSuffix: true,
@@ -167,7 +176,10 @@ export default async function HistoryPage() {
                         </div>
                       </div>
 
-                      <ArrowRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-pink)] flex-shrink-0 transition-colors" />
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent-pink)] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <span>View Report</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </div>
                     </div>
                   </Link>
                 );

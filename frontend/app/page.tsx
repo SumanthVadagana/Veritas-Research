@@ -289,7 +289,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="max-w-2xl mx-auto"
+            className="max-w-2xl mx-auto mb-10"
           >
             <div className="p-2 sm:p-2.5 rounded-3xl border border-[var(--border-medium)] bg-[var(--bg-secondary)] shadow-2xl flex flex-col sm:flex-row gap-2">
               <input
@@ -308,7 +308,88 @@ export default function LandingPage() {
               </button>
             </div>
           </motion.form>
+
+          {/* Example Claims Cards Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="max-w-4xl mx-auto text-left"
+          >
+            <div className="flex items-center justify-between mb-4 px-1">
+              <p className="text-xs font-extrabold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[var(--accent-pink)]" />
+                Try Trending Verification Examples
+              </p>
+              <span className="text-[11px] text-[var(--text-muted)] font-semibold">Click any card to verify instantly</span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {[
+                {
+                  type: "Health Myth",
+                  badgeColor: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+                  icon: "🩺",
+                  claim: "Drinking warm lemon water every morning cures cancer and destroys all viral infections.",
+                },
+                {
+                  type: "Government Scheme",
+                  badgeColor: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+                  icon: "🏛️",
+                  claim: "Government is offering free ₹5,000 monthly deposit under PM Solar Yojana for all households.",
+                },
+                {
+                  type: "Misattributed Quote",
+                  badgeColor: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+                  icon: "💬",
+                  claim: "Albert Einstein once stated: 'The problem with quotes on the internet is that it is hard to verify their authenticity.'",
+                },
+                {
+                  type: "Doctored Statistic",
+                  badgeColor: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+                  icon: "📊",
+                  claim: "92% of total global carbon emissions originate from just three developing countries in Asia.",
+                },
+                {
+                  type: "Viral Image Claim",
+                  badgeColor: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+                  icon: "🖼️",
+                  claim: "NASA satellite photo showing India completely glowing in rainbow lights on Diwali night.",
+                },
+                {
+                  type: "Tech Misinformation",
+                  badgeColor: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+                  icon: "📡",
+                  claim: "5G mobile towers emit high-frequency radiation causing mass disorientation in migratory birds.",
+                },
+              ].map(({ type, badgeColor, icon, claim }) => (
+                <div
+                  key={type}
+                  onClick={() => router.push(`/research?topic=${encodeURIComponent(claim)}&depth=standard`)}
+                  className="p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:border-[var(--accent-pink)]/50 hover:bg-[var(--bg-card-hover)] transition-all cursor-pointer flex flex-col justify-between group shadow-sm"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${badgeColor}`}>
+                        <span>{icon}</span>
+                        <span>{type}</span>
+                      </span>
+                      <ArrowUpRight className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[var(--accent-pink)] transition-colors" />
+                    </div>
+                    <p className="text-xs font-semibold text-[var(--text-primary)] leading-relaxed line-clamp-3">
+                      "{claim}"
+                    </p>
+                  </div>
+                  <div className="mt-3 pt-2 border-t border-[var(--border-subtle)] flex items-center justify-between text-[10px] font-bold text-[var(--accent-pink)] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>Fact Check Now</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </section>
+
 
         {/* Feature Grid */}
         <section className="max-w-6xl mx-auto px-4 sm:px-6 py-12 border-t border-[var(--border-subtle)]">

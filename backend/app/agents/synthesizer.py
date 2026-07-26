@@ -92,8 +92,9 @@ class SynthesizerAgent(BaseAgent):
             res = await self.call_json(
                 system=SYNTHESIZER_SYSTEM,
                 user=user_prompt,
-                max_tokens=4000,
+                max_tokens=1500,
             )
+
 
             if isinstance(res, dict) and "synthesis_markdown" in res:
                 res.setdefault("verified_answer", self._derive_answer(topic, claims))

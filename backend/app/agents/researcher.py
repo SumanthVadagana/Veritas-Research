@@ -59,14 +59,15 @@ class ResearcherAgent(BaseAgent):
         super().__init__("Researcher")
 
     async def break_topic(self, topic: str, depth: str = "standard") -> List[str]:
-        """Break down a topic into focused search sub-queries with fast execution."""
-        depth_map = {"quick": 2, "standard": 3, "deep": 4}
-        num_queries = depth_map.get(str(depth).lower(), 3)
+        """Break down a topic into focused search sub-queries with ultra-fast execution."""
+        depth_map = {"quick": 1, "standard": 2, "deep": 3}
+        num_queries = depth_map.get(str(depth).lower(), 2)
 
         user_prompt = (
             f"Research Topic: {topic}\n"
             f"Decompose this topic into exactly {num_queries} targeted search sub-queries. Return PURE JSON ONLY."
         )
+
 
         try:
             res = await self.call_json(

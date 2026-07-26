@@ -84,8 +84,9 @@ class VerifierAgent(BaseAgent):
             res = await self.call_json(
                 system=VERIFIER_SYSTEM,
                 user=user_prompt,
-                max_tokens=2048,
+                max_tokens=1000,
             )
+
 
             if isinstance(res, dict) and "verified_claims" in res:
                 v_claims = res["verified_claims"]

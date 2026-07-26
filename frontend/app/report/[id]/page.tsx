@@ -144,15 +144,24 @@ export default function SharedReportPage() {
   const verifiedAnswer = synthesisText.split("\n\n")[0] || session.query;
   const explanationText = synthesisText.split("\n\n").slice(1).join("\n\n") || null;
 
-  const formattedDate = session.created_at
-    ? new Date(session.created_at).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "Recently";
+  let formattedDate = "Recently";
+  try {
+    if (session?.created_at) {
+      const d = new Date(session.created_at);
+      if (!isNaN(d.getTime())) {
+        formattedDate = d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+    }
+  } catch {
+    formattedDate = "Recently";
+  }
+
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex flex-col transition-colors duration-300">

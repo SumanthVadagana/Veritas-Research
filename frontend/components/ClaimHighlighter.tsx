@@ -10,6 +10,7 @@ interface ClaimHighlighterProps {
 
 /* ── helpers ─────────────────────────────────────────────────────────────── */
 function tokenize(text: string): string[] {
+  if (!text || typeof text !== "string") return [];
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")
@@ -18,6 +19,7 @@ function tokenize(text: string): string[] {
 }
 
 function overlapScore(a: string, b: string): number {
+  if (!a || !b) return 0;
   const ta = new Set(tokenize(a));
   const tb = new Set(tokenize(b));
   if (!ta.size || !tb.size) return 0;
@@ -33,15 +35,48 @@ interface Segment {
   claim: string | null;
 }
 
-function buildSegments(synthesis: string, factChecks: FactCheck[]): Segment[] {
-  // Split into sentences (include the delimiter)
-  const raw = synthesis
-    .replace(/#{1,6}\s+/g, "")        // strip markdown headings
-    .replace(/\*\*|__|\*|_/g, "")     // strip bold/italic
-    .replace(/\[.*?\]\(.*?\)/g, "")   // strip links
-    .trim();
+function buildSegments(synthesis: string | null, factChecks: FactCheck[]): Segment[] {
+  if (!synthesis || typeof synthesis !== "string") return [];
+  const safeChecks = Array.isArray(factChecks) ? factChecks : [];
 
-  const sentences = raw.match(/[^.!?\n]+[.!?\n]*/g) ?? [raw];
+  try {
+    const raw = synthesis
+      .replace(/#{1,6}\s+/g, "")        // strip markdown headings
+      .replace(/\*\*|__|\*|_/g, "")     // strip bold/italic
+      .replace(/\[.*?\]\(.*?\)/g, "")   // strip links
+      .trim();
+
+    const sentences = raw.match(/[^.!?\n]+[.!?\n]*/g) ?? [raw];
+
+    return sentences.map((sent) => {
+      const trimmed = sent.trim();
+      if (!trimmed || trimmed.length < 20) return { text: sent, verdict: null, confidence_score: null, claim: null };
+
+      let best: FactCheck | null = null;
+      let bestScore = 0;
+      for (const fc of safeChecks) {
+        if (!fc || !fc.claim) continue;
+        const s = overlapScore(trimmed, fc.claim);
+        if (s > bestScore && s >= 0.12) {
+          bestScore = s;
+          best = fc;
+        }
+      }
+
+      if (!best) return { text: sent, verdict: null, confidence_score: null, claim: null };
+
+      return {
+        text: sent,
+        verdict: best.verdict,
+        confidence_score: best.confidence_score ?? null,
+        claim: best.claim,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 
   return sentences.map((sent) => {
     const trimmed = sent.trim();

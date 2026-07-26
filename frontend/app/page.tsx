@@ -76,7 +76,7 @@ export default function LandingPage() {
   const [topic, setTopic] = useState("");
   const [depth, setDepth] = useState<"quick" | "standard" | "deep">("standard");
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError("");
 
@@ -89,14 +89,18 @@ export default function LandingPage() {
       return;
     }
 
-    if (authTab === "signup") {
-      if (!name.trim()) {
-        setAuthError("Please enter your full name.");
-        return;
+    try {
+      if (authTab === "signup") {
+        if (!name.trim()) {
+          setAuthError("Please enter your full name.");
+          return;
+        }
+        await signup(email, password, name);
+      } else {
+        await login(email, password);
       }
-      signup(email, name);
-    } else {
-      login(email);
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : "Authentication failed.");
     }
   };
 

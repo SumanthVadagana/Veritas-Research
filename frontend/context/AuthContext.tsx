@@ -10,6 +10,8 @@ export type UserProfile = {
   role: string;
 };
 
+import { loginApi, signupApi } from "@/lib/api";
+
 interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
@@ -17,8 +19,8 @@ interface AuthContextType {
   authMode: "signin" | "signup";
   openAuthModal: (mode?: "signin" | "signup") => void;
   closeAuthModal: () => void;
-  login: (email: string, name?: string) => void;
-  signup: (email: string, name: string) => void;
+  login: (email: string, password?: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -50,26 +52,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthModalOpen(false);
   };
 
-  const login = (email: string, name?: string) => {
-    const newUser: UserProfile = {
-      id: `usr_${Date.now()}`,
-      email,
-      name: name || email.split("@")[0] || "Researcher",
-      role: "Pro Plan",
-    };
-    setUser(newUser);
-    localStorage.setItem("veritas_user_session", JSON.stringify(newUser));
-    closeAuthModal();
+  const login = async (email: string, password = "") => {
+    try {
+      const res = await loginApi(email, password);
+      const newUser: UserProfile = {
+        id: res.id,
+        email: res.email,
+        name: res.name || email.split("@")[0] || "Researcher",
+        role: res.role || "Pro Plan",
+      };
+      setUser(newUser);
+      localStorage.setItem("veritas_user_session", JSON.stringify(newUser));
+      closeAuthModal();
+    } catch (err) {
+      throw err;
+    }
   };
 
-  const signup = (email: string, name: string) => {
-    login(email, name);
+  const signup = async (email: string, password: string, name: string) => {
+    try {
+      const res = await signupApi(email, password, name);
+      const newUser: UserProfile = {
+        id: res.id,
+        email: res.email,
+        name: res.name || name,
+        role: res.role || "user",
+      };
+      setUser(newUser);
+      localStorage.setItem("veritas_user_session", JSON.stringify(newUser));
+      closeAuthModal();
+    } catch (err) {
+      throw err;
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("veritas_user_session");
   };
+
 
   return (
     <AuthContext.Provider

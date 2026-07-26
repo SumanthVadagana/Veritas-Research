@@ -189,3 +189,31 @@ export async function analyzePdf(file: File): Promise<PdfAnalysisResult> {
   }
   return res.json();
 }
+
+export async function loginApi(email: string, password: string): Promise<{ id: string; email: string; name: string; role: string }> {
+  const res = await fetch(`${API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ detail: "Login failed" }));
+    throw new Error(errData.detail || "Authentication failed");
+  }
+  return res.json();
+}
+
+export async function signupApi(email: string, password: string, name: string): Promise<{ id: string; email: string; name: string; role: string }> {
+  const res = await fetch(`${API_URL}/api/auth/signup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password, name }),
+  });
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({ detail: "Signup failed" }));
+    throw new Error(errData.detail || "Registration failed");
+  }
+  return res.json();
+}
+
+

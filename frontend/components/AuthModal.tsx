@@ -18,7 +18,7 @@ export function AuthModal() {
 
   const isSignUp = authMode === "signup";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -31,20 +31,24 @@ export function AuthModal() {
       return;
     }
 
-    if (isSignUp) {
-      if (!name.trim()) {
-        setError("Please enter your name.");
-        return;
+    try {
+      if (isSignUp) {
+        if (!name.trim()) {
+          setError("Please enter your name.");
+          return;
+        }
+        await signup(email, password, name);
+      } else {
+        await login(email, password);
       }
-      signup(email, name);
-    } else {
-      login(email);
-    }
 
-    // Reset form
-    setEmail("");
-    setPassword("");
-    setName("");
+      // Reset form on success
+      setEmail("");
+      setPassword("");
+      setName("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Authentication failed.");
+    }
   };
 
   return (

@@ -77,34 +77,8 @@ function buildSegments(synthesis: string | null, factChecks: FactCheck[]): Segme
   }
 }
 
-
-  return sentences.map((sent) => {
-    const trimmed = sent.trim();
-    if (!trimmed || trimmed.length < 20) return { text: sent, verdict: null, confidence_score: null, claim: null };
-
-    // Find best matching fact-check claim
-    let best: FactCheck | null = null;
-    let bestScore = 0;
-    for (const fc of factChecks) {
-      const s = overlapScore(trimmed, fc.claim);
-      if (s > bestScore && s >= 0.12) {
-        bestScore = s;
-        best = fc;
-      }
-    }
-
-    if (!best) return { text: sent, verdict: null, confidence_score: null, claim: null };
-
-    return {
-      text: sent,
-      verdict: best.verdict,
-      confidence_score: best.confidence_score ?? null,
-      claim: best.claim,
-    };
-  });
-}
-
 /* ── color helpers ───────────────────────────────────────────────────────── */
+
 function getSegmentStyle(seg: Segment) {
   if (!seg.verdict) return { bg: "", border: "", tooltip: null, dot: "" };
 

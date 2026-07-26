@@ -166,9 +166,12 @@ function ClaimCard({
           </p>
         </div>
 
-        {/* ── Verified Answer ── */}
+        {/* ── Confidence Score (Fact Score) FIRST ── */}
+        <ConfidenceBar score={score} size="md" />
+
+        {/* ── Verified Answer & Verdict directly BELOW the Fact Score ── */}
         <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] shadow-sm">
-          <p className="text-[10px] font-bold text-[var(--accent-pink)] uppercase tracking-widest mb-2 flex items-center gap-1.5">
+          <p className="text-[10px] font-bold text-[var(--accent-pink)] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-[var(--accent-pink)]" />
             Verified Answer & Verdict
           </p>
@@ -181,9 +184,6 @@ function ClaimCard({
           </p>
         </div>
 
-
-        {/* ── Confidence Score ── */}
-        <ConfidenceBar score={score} size="md" />
 
         {/* ── Short Explanation ── */}
         {fc.explanation && (
@@ -296,13 +296,19 @@ function AnswerHero({
       </div>
 
       <div className="p-4 space-y-4">
-        {/* The answer */}
-        <p className="text-sm font-bold text-[var(--text-primary)] leading-relaxed">
-          {verifiedAnswer}
-        </p>
-
-        {/* Overall confidence bar */}
+        {/* Overall confidence bar (Fact Score) FIRST */}
         {confidence !== null && <ConfidenceBar score={confidence} size="lg" />}
+
+        {/* Verified Text Answer directly BELOW the Fact Score */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-subtle)] shadow-sm">
+          <p className="text-[10px] font-bold text-[var(--accent-pink)] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--accent-pink)]" />
+            Verified Answer
+          </p>
+          <p className="text-sm font-extrabold text-[var(--text-primary)] leading-relaxed">
+            {verifiedAnswer}
+          </p>
+        </div>
 
         {/* Explanation collapsible */}
         {explanation && (
@@ -333,6 +339,7 @@ function AnswerHero({
           </>
         )}
       </div>
+
     </motion.div>
   );
 }
@@ -591,6 +598,27 @@ export function SynthesisPanel({
             >
               {synthesis ? (
                 <MarkdownRenderer content={synthesis} />
+              ) : verifiedAnswer ? (
+                <div className="space-y-4 text-xs leading-relaxed text-[var(--text-secondary)]">
+                  <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)]">
+                    <h3 className="text-sm font-bold text-[var(--accent-pink)] mb-2">## Executive Summary & Verified Answer</h3>
+                    <p className="font-semibold text-[var(--text-primary)]">{verifiedAnswer}</p>
+                    {explanation && <p className="mt-2 text-[var(--text-secondary)]">{explanation}</p>}
+                  </div>
+
+                  {factChecks.length > 0 && (
+                    <div className="p-4 rounded-xl bg-[var(--bg-card)] border border-[var(--border-subtle)] space-y-3">
+                      <h3 className="text-sm font-bold text-[var(--text-primary)]">## Claim-by-Claim Evidence</h3>
+                      {factChecks.map((fc, i) => (
+                        <div key={i} className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
+                          <p className="font-bold text-[var(--text-primary)]">{i + 1}. {fc.claim}</p>
+                          <p className="text-[11px] text-emerald-400 font-semibold mt-1">Verdict: {fc.verdict.toUpperCase()}</p>
+                          {fc.explanation && <p className="text-[11px] text-[var(--text-muted)] mt-1">{fc.explanation}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="space-y-2.5">
                   {[100, 95, 88, 100, 78, 90, 60, 100, 92, 84].map((w, i) => (
@@ -611,15 +639,31 @@ export function SynthesisPanel({
               transition={{ duration: 0.18 }}
               className="flex flex-col gap-2"
             >
-              {citations.length === 0 ? (
-                <p className="text-xs font-bold text-[var(--text-primary)] text-center py-10">
-                  {status === "running" ? "Gathering sources…" : "No sources found"}
-                </p>
-              ) : (
-                citations.map((c, i) => <SourceCard key={i} {...c} index={i} />)
-              )}
+              {(() => {
+                const combinedSources: Citation[] = [
+                  ...citations,
+                  ...sourcesUsed.map((s) => ({
+                    url: s.url,
+                    title: s.title || s.url,
+                    snippet: s.title,
+                    source_index: s.index,
+                    credibility_score: s.credibility,
+                  })),
+                ].filter((s, idx, self) => Boolean(s.url) && self.findIndex((t) => t.url === s.url) === idx);
+
+                if (combinedSources.length === 0) {
+                  return (
+                    <p className="text-xs font-bold text-[var(--text-primary)] text-center py-10">
+                      {status === "running" ? "Gathering sources…" : "No sources found"}
+                    </p>
+                  );
+                }
+
+                return combinedSources.map((c, i) => <SourceCard key={i} {...c} index={i} />);
+              })()}
             </motion.div>
           )}
+
 
         </AnimatePresence>
       </div>

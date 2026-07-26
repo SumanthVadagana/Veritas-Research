@@ -73,13 +73,18 @@ async def download_session_pdf(
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
+    synthesis_text = session.final_report.synthesis if session.final_report else ""
+    verified_ans = synthesis_text.split("\n\n")[0] if synthesis_text else None
+
     session_data = {
         "id": session.id,
         "query": session.query,
         "created_at": session.created_at.strftime("%Y-%m-%d %H:%M UTC") if session.created_at else "",
         "confidence_score": session.confidence_score,
+        "synthesis": synthesis_text,
+        "verified_answer": verified_ans,
         "final_report": {
-            "synthesis": session.final_report.synthesis if session.final_report else "",
+            "synthesis": synthesis_text,
             "confidence_score": session.final_report.confidence_score if session.final_report else session.confidence_score,
         },
         "claims": [
@@ -93,20 +98,14 @@ async def download_session_pdf(
         ],
         "sources": [
             {
-                "title": s.title,
-                "url": s.url,
-                "credibility_score": s.credibility_score,
-            }
-            for c in (session.claims or []) for s in []
-        ] or [
-            {
-                "title": s.title or s.url,
-                "url": s.url,
-                "credibility_score": s.credibility_score,
+                "title": s.title or s.url or "Source",
+                "url": s.url or "",
+                "credibility_score": s.relevance_score if hasattr(s, 'relevance_score') and s.relevance_score is not None else 0.8,
             }
             for s in (session.sources or [])
         ],
     }
+
 
     pdf_bytes = generate_report_pdf(session_data)
     filename = f"veritas_report_{session_id[:8]}.pdf"

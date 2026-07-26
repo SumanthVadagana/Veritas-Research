@@ -9,16 +9,17 @@ interface SourceCardProps extends Citation {
   index: number;
 }
 
-function getDomain(url: string): string {
+function getDomain(url?: string): string {
+  if (!url) return "web-source";
   try {
     return new URL(url).hostname.replace("www.", "");
   } catch {
-    return url.slice(0, 40);
+    return url.length > 30 ? url.slice(0, 30) + "…" : url;
   }
 }
 
 export function SourceCard({
-  url,
+  url = "",
   title,
   snippet,
   source_index,
@@ -27,6 +28,7 @@ export function SourceCard({
 }: SourceCardProps) {
   const [expanded, setExpanded] = useState(false);
   const domain = getDomain(url);
+
   const credPct = credibility_score != null ? Math.round(credibility_score * 100) : 75;
 
   const credColor =

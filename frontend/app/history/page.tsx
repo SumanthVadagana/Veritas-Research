@@ -147,8 +147,9 @@ export default async function HistoryPage() {
                     : "bg-rose-500/10 text-rose-500 border-rose-500/25";
 
                 return (
-                  <Link key={s.id} href={`/report/${s.id}`}>
+                  <Link key={s.id} href={`/research?session_id=${s.id}`}>
                     <div className="flex items-center gap-3.5 p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--accent-pink)]/40 transition-all duration-200 group shadow-sm">
+
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--bg-secondary)] border border-[var(--border-subtle)]">
                         <StatusIcon className={`w-5 h-5 ${statusColor}`} />
                       </div>

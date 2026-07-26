@@ -219,6 +219,120 @@ export function useResearchStream() {
     []
   );
 
+  const loadSession = useCallback(async (id: string) => {
+    esRef.current?.close();
+    _eventCounter = 0;
+
+    setState({
+      sessionId: id,
+      status: "running",
+      events: [],
+      synthesis: null,
+      verifiedAnswer: null,
+      explanation: null,
+      confidence: null,
+      citations: [],
+      factChecks: [],
+      sourcesUsed: [],
+      error: null,
+      progressMessage: "Loading research session details...",
+    });
+
+    try {
+      const res = await fetch(`${API_URL}/api/sessions/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch session details");
+      const data = await res.json();
+
+      // Transform backend session records
+      const rawEvents: AgentEvent[] = (data.agent_outputs || []).map((output: any, idx: number) => ({
+        id: output.id || String(idx + 1),
+        agent: output.agent_name || "System",
+        event_type: output.event_type || "info",
+        message: output.message || "",
+        metadata: output.payload || undefined,
+        timestamp: new Date(output.created_at || Date.now()),
+      }));
+
+      const citations: Citation[] = (data.sources || []).map((s: any, idx: number) => ({
+        url: s.url,
+        title: s.title,
+        snippet: s.snippet,
+        source_index: s.source_index ?? idx + 1,
+        credibility_score: s.relevance_score ?? 0.8,
+      }));
+
+      const factChecks: FactCheck[] = (data.claims || []).map((c: any) => ({
+        claim: c.claim_text,
+        verdict: c.verdict,
+        confidence: c.confidence,
+        confidence_score: c.confidence_score,
+        explanation: c.explanation,
+        supporting_sources: c.supporting_sources,
+      }));
+
+      const synthesis = data.final_report?.synthesis || null;
+      const confidence = data.confidence_score ?? data.final_report?.confidence_score ?? null;
+      const verifiedAnswer = synthesis ? synthesis.split("\n\n")[0] : null;
+      const explanation = synthesis ? synthesis.split("\n\n").slice(1).join("\n\n") : null;
+
+      const isCompleted = data.status === "completed" || synthesis != null;
+
+      setState({
+        sessionId: id,
+        status: isCompleted ? "completed" : data.status === "failed" ? "failed" : "running",
+        events: rawEvents,
+        synthesis,
+        verifiedAnswer,
+        explanation,
+        confidence,
+        citations,
+        factChecks,
+        sourcesUsed: citations.map((c) => ({
+          index: c.source_index,
+          url: c.url,
+          title: c.title || c.url,
+          credibility: c.credibility_score ?? 0.8,
+        })),
+        error: data.status === "failed" ? "Session failed during execution" : null,
+        progressMessage: undefined,
+      });
+
+      // If still running, connect to SSE stream to stream remaining events
+      if (data.status === "pending" || data.status === "running") {
+        const es = new EventSource(`${API_URL}/api/stream/${id}`);
+        esRef.current = es;
+
+        es.onmessage = (e: MessageEvent<string>) => {
+          try {
+            const payload = JSON.parse(e.data) as Record<string, unknown>;
+            const type = payload.type as string;
+
+            if (type === "complete") {
+              setState((prev) => ({ ...prev, status: "completed", progressMessage: undefined }));
+              es.close();
+            } else if (type === "error") {
+              setState((prev) => ({ ...prev, status: "failed", error: payload.message as string }));
+              es.close();
+            }
+          } catch {
+            /* ignore parse errors */
+          }
+        };
+
+        es.onerror = () => {
+          es.close();
+        };
+      }
+    } catch (err) {
+      setState((prev) => ({
+        ...prev,
+        status: "failed",
+        error: err instanceof Error ? err.message : "Failed to load session",
+        progressMessage: undefined,
+      }));
+    }
+  }, []);
+
   const reset = useCallback(() => {
     esRef.current?.close();
     _eventCounter = 0;
@@ -238,5 +352,6 @@ export function useResearchStream() {
     });
   }, []);
 
-  return { ...state, startResearch, reset };
+  return { ...state, startResearch, loadSession, reset };
 }
+

@@ -38,6 +38,7 @@ function DashboardContent() {
   const searchParams = useSearchParams();
   const initialTopic = searchParams.get("topic");
   const initialDepth = searchParams.get("depth") || "standard";
+  const sessionParam = searchParams.get("session_id") || searchParams.get("id");
   const autoStarted = useRef(false);
   const [inputMode, setInputMode] = useState<InputMode>("text");
 
@@ -55,23 +56,38 @@ function DashboardContent() {
     sessionId,
     progressMessage,
     startResearch,
+    loadSession,
     reset,
   } = useResearchStream();
 
   const timelineRef = useRef<HTMLDivElement>(null);
 
+  // Load session from session_id or start new topic
   useEffect(() => {
-    if (initialTopic && !autoStarted.current) {
+    if (sessionParam && !autoStarted.current) {
+      autoStarted.current = true;
+      loadSession(sessionParam);
+    } else if (initialTopic && !autoStarted.current) {
       autoStarted.current = true;
       startResearch(initialTopic, initialDepth);
     }
-  }, [initialTopic, initialDepth, startResearch]);
+  }, [sessionParam, initialTopic, initialDepth, loadSession, startResearch]);
+
+  // Keep URL synced with active sessionId
+  useEffect(() => {
+    if (sessionId && typeof window !== "undefined" && !sessionParam) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("session_id", sessionId);
+      window.history.replaceState(null, "", url.toString());
+    }
+  }, [sessionId, sessionParam]);
 
   useEffect(() => {
     const el = timelineRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
   }, [events]);
+
 
   // Called when image/pdf analysis is done — switch to text mode, run pipeline
   const handleUploadReady = (extractedText: string, _sessionId: string) => {

@@ -374,7 +374,8 @@ export function SynthesisPanel({
   const [tab, setTab] = useState<Tab>("answer");
   const [copied, setCopied] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "https://veritas-backend-5e3o.onrender.com";
 
   const handleShare = () => {
     if (typeof window !== "undefined" && sessionId) {
@@ -385,11 +386,27 @@ export function SynthesisPanel({
     }
   };
 
-  const handleDownloadPdf = () => {
-    if (sessionId) {
+  const handleDownloadPdf = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!sessionId) return;
+    try {
+      const pdfUrl = `${API_URL}/api/sessions/${sessionId}/pdf`;
+      const response = await fetch(pdfUrl);
+      if (!response.ok) throw new Error("Failed to generate PDF");
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `veritas_report_${sessionId.slice(0, 8)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(link);
+    } catch {
       window.open(`${API_URL}/api/sessions/${sessionId}/pdf`, "_blank");
     }
   };
+
 
   const TABS: { id: Tab; label: string; Icon: React.ElementType; count?: number }[] = [
     { id: "answer",      label: "Results",      Icon: Target,    count: factChecks.length },

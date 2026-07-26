@@ -1,5 +1,6 @@
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL || "https://veritas-backend-5e3o.onrender.com";
+
 
 // ─── Types (mirror backend Pydantic schemas) ──────────────────────────────────
 

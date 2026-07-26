@@ -20,7 +20,8 @@ import { SynthesisPanel } from "@/components/SynthesisPanel";
 import { getSession, SessionDetail } from "@/lib/api";
 import type { FactCheck, Citation, SourceUsed } from "@/hooks/useResearchStream";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "https://veritas-backend-5e3o.onrender.com";
 
 export default function SharedReportPage() {
   const params = useParams();
@@ -54,11 +55,27 @@ export default function SharedReportPage() {
     }
   };
 
-  const handleDownloadPdf = () => {
-    if (id) {
+  const handleDownloadPdf = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    if (!id) return;
+    try {
+      const pdfUrl = `${API_URL}/api/sessions/${id}/pdf`;
+      const response = await fetch(pdfUrl);
+      if (!response.ok) throw new Error("Failed to generate PDF");
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `veritas_report_${id.slice(0, 8)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(link);
+    } catch {
       window.open(`${API_URL}/api/sessions/${id}/pdf`, "_blank");
     }
   };
+
 
   if (isLoading) {
     return (
